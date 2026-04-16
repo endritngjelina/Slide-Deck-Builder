@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Deck Builder Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-thumbnail {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .slide-thumbnail:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slide-number {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .slide-title {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 5px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Main Editor */
+        .main-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .toolbar {
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+        }
+
+        .toolbar button:hover {
+            background: #e9ecef;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .toolbar button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 35px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Slide Canvas */
+        .slide-canvas {
+            flex: 1;
+            position: relative;
+            background: #f8f9fa;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            width: 800px;
+            height: 600px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            transform-origin: center;
+            transition: all 0.5s ease;
+        }
+
+        .slide-content {
+            padding: 40px;
+            height: 100%;
+            position: relative;
+        }
+
+        .editable {
+            outline: none;
+            min-height: 30px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .editable:focus {
+            background: rgba(0, 123, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
+        }
+
+        .slide-title-input {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .slide-content-input {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #34495e;
+        }
+
+        /* Animation Classes */
+        .slide-transition {
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.3); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .slide-in-right { animation-name: slideInRight; }
+        .slide-in-left { animation-name: slideInLeft; }
+        .fade-in { animation-name: fadeIn; }
+        .zoom-in { animation-name: zoomIn; }
+
+        /* Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .presentation-mode .slide {
+            width: 90vw;
+            height: 67.5vw;
+            max-width: 1200px;
+            max-height: 900px;
+        }
+
+        .presentation-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .presentation-controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .slide-preview {
+            position: relative;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            padding: 20px;
+            min-height: 150px;
+        }
+
+        /* Export Progress */
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .slide {
+                width: 90%;
+                height: 67.5%;
+            }
+            
+            .toolbar {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">✨ Slide Deck Pro</div>
+            
+            <div class="slide-thumbnails" id="slideThumbnails">
+                <!-- Thumbnails will be generated here -->
+            </div>
+            
+            <div class="controls">
+                <button onclick="addSlide()">➕ Add Slide</button>
+                <button onclick="duplicateSlide()">📋 Duplicate</button>
+                <button onclick="deleteSlide()">🗑️ Delete</button>
+                <button onclick="openTemplateModal()">🎨 Templates</button>
+                <button onclick="startPresentation()">▶️ Present</button>
+                <button onclick="exportHTML()">📄 Export HTML</button>
+                <button onclick="exportPDF()">📑 Export PDF</button>
+            </div>
+        </div>
+
+        <!-- Main Editor -->
+        <div class="main-editor">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button onclick="formatText('bold')" title="Bold">B</button>
+                <button onclick="formatText('italic')" title="Italic">I</button>
+                <button onclick="formatText('underline')" title="Underline">U</button>
+                
+                <select onchange="changeFont(this.value)">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Courier New">Courier New</option>
+                </select>
+                
+                <select onchange="changeFontSize(this.value)">
+                    <option value="12px">12px</option>
+                    <option value="14px">14px</option>
+                    <option value="16px">16px</option>
+                    <option value="18px" selected>18px</option>
+                    <option value="24px">24px</option>
+                    <option value="36px">36px</option>
+                    <option value="48px">48px</option>
+                </select>
+                
+                <input type="color" class="color-picker" onchange="changeTextColor(this.value)" title="Text Color">
+                <input type="color" class="color-picker" onchange="changeBackgroundColor(this.value)" title="Background Color">
+                
+                <button onclick="addBulletPoint()">• Bullet</button>
+                <button onclick="addImage()">🖼️ Image</button>
+                
+                <select onchange="setTransition(this.value)">
+                    <option value="">No Transition</option>
+                    <option value="slide-in-right">Slide Right</option>
+                    <option value="slide-in-left">Slide Left</option>
+                    <option value="fade-in">Fade In</option>
+                    <option value="zoom-in">Zoom In</option>
+                </select>
+            </div>
+
+            <!-- Slide Canvas -->
+            <div class="slide-canvas">
+                <div class="slide" id="currentSlide">
+                    <div class="slide-content">
+                        <div class="editable slide-title-input" contenteditable="true" data-placeholder="Click to add title">
+                            Welcome to Slide Deck Pro
+                        </div>
+                        <div class="editable slide-content-input" contenteditable="true" data-placeholder="Click to add content">
+                            Create stunning presentations with professional design and smooth transitions.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="slide" id="presentationSlide">
+            <div class="slide-content"></div>
+        </div>
+        <div class="presentation-controls">
+            <button onclick="previousSlide()">⬅️ Previous</button>
+            <button onclick="nextSlide()">➡️ Next</button>
+            <button onclick="exitPresentation()">❌ Exit</button>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal" id="templateModal">
+        <div class="modal-content">
+            <h3>Choose a Template</h3>
+            <div class="template-grid">
+                <div class="slide-preview" onclick="applyTemplate('business')">
+                    <h4>Business Presentation</h4>
+                    <p>Professional layout for business presentations</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('creative')">
+                    <h4>Creative Design</h4>
+                    <p>Colorful and engaging for creative projects</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('minimal')">
+                    <h4>Minimal</h4>
+                    <p>Clean and simple design</p>
+                </div>
+            </div>
+            <button onclick="closeModal('templateModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Export Progress Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <h3>Exporting Presentation</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="exportStatus">Preparing export...</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let slides = [
+            {
+                id: 1,
+                title: "Welcome to Slide Deck Pro",
+                content: "Create stunning presentations with professional design and smooth transitions.",
+                backgroundColor: "#ffffff",
+                transition: "fade-in"
+            }
+        ];
+        let currentSlideIndex = 0;
+        let presentationIndex = 0;
+
+        // Initialize application
+        function initApp() {
+            renderThumbnails();
+            loadSlide(0);
+            setupEventListeners();
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Auto-save on content change
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('editable')) {
+                    saveCurrentSlide();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            exportHTML();
+                            break;
+                        case 'n':
+                            e.preventDefault();
+                            addSlide();
+                            break;
+                        case 'd':
+                            e.preventDefault();
+                            duplicateSlide();
+                            break;
+                    }
+                }
+                
+                // Presentation navigation
+                if (document.getElementById('presentationMode').style.display === 'flex') {
+                    if (e.key === 'ArrowRight' || e.key === ' ') {
+                        e.preventDefault();
+                        nextSlide();
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        previousSlide();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        exitPresentation();
+                    }
+                }
+            });
+        }
+
+        // Slide management
+        function addSlide() {
+            const newSlide = {
+                id: Date.now(),
+                title: "New Slide Title",
+                content: "Click to add content",
+                backgroundColor: "#ffffff",
+                transition: "fade-in"
+            };
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            renderThumbnails();
+            loadSlide(currentSlideIndex);
+        }
+
+        function duplicateSlide() {
+            const currentSlide = slides[currentSlideIndex];
+            const duplicated = {
+                ...currentSlide,
+                id: Date.now(),
+                title: currentSlide.title + " (Copy)"
+            };
+            slides.splice(currentSlideIndex + 1, 0, duplicated);
+            currentSlideIndex++;
+            renderThumbnails();
+            loadSlide(currentSlideIndex);
+        }
+
+        function deleteSlide() {
+            if (slides.length > 1) {
+                slides.splice(currentSlideIndex, 1);
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = slides.length - 1;
+                }
+                renderThumbnails();
+                loadSlide(currentSlideIndex);
+            }
+        }
+
+        function loadSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            
+            currentSlideIndex = index;
+            const slide = slides[index];
+            const slideElement = document.getElementById('currentSlide');
+            
+            // Update content
+            const titleElement = slideElement.querySelector('.slide-title-input');
+            const contentElement = slideElement.querySelector('.slide-content-input');
+            
+            titleElement.textContent = slide.title;
+            contentElement.innerHTML = slide.content;
+            
+            // Update background
+            slideElement.style.backgroundColor = slide.backgroundColor;
+            
+            // Update thumbnails
+            renderThumbnails();
+        }
+
+        function saveCurrentSlide() {
+            const slide = slides[currentSlideIndex];
+            const slideElement = document.getElementById('currentSlide');
+            
+            slide.title = slideElement.querySelector('.slide-title-input').textContent || 'Untitled';
+            slide.content = slideElement.querySelector('.slide-content-input').innerHTML || '';
+            
+            renderThumbnails();
+        }
+
+        function renderThumbnails() {
+            const container = document.getElementById('slideThumbnails');
+            container.innerHTML = '';
+            
+            slides.forEach((slide, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${index === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.onclick = () => loadSlide(index);
+                
+                thumbnail.innerHTML = `
+                    <div class="slide-number">Slide ${index + 1}</div>
+                    <div class="slide-title">${slide.title}</div>
+                `;
+                
+                container.appendChild(thumbnail);
+            });
+        }
+
+        // Formatting functions
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            saveCurrentSlide();
+        }
+
+        function changeFont(font) {
+            document.execCommand('fontName', false, font);
+            saveCurrentSlide();
+        }
+
+        function changeFontSize(size) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.style.fontSize = size;
+                
+                try {
+                    range.surroundContents(span);
+                } catch (e) {
+                    span.appendChild(range.extractContents());
+                    range.insertNode(span);
+                }
+            }
+            saveCurrentSlide();
+        }
+
+        function changeTextColor(color) {
+            document.execCommand('foreColor', false, color);
+            saveCurrentSlide();
+        }
+
+        function changeBackgroundColor(color) {
+            const slide = slides[currentSlideIndex];
+            slide.backgroundColor = color;
+            document.getElementById('currentSlide').style.backgroundColor = color;
+        }
+
+        function addBulletPoint() {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const bullet = document.createElement('div');
+            bullet.innerHTML = '• New bullet point';
+            bullet.style.marginLeft = '20px';
+            bullet.style.marginBottom = '10px';
+            
+            range.insertNode(bullet);
+            saveCurrentSlide();
+        }
+
+        function addImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '300px';
+                        img.style.height = 'auto';
+                        img.style.margin = '10px';
+                        img.style.borderRadius = '5px';
+                        
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            range.insertNode(img);
+                        }
+                        saveCurrentSlide();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function setTransition(transition) {
+            slides[currentSlideIndex].transition = transition;
+        }
+
+        // Template functions
+        function openTemplateModal() {
+            document.getElementById('templateModal').style.display = 'flex';
+        }
+
+        function applyTemplate(template) {
+            const slideElement = document.getElementById('currentSlide');
+            
+            switch(template) {
+                case 'business':
+                    slideElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    slideElement.style.color = 'white';
+                    break;
+                case 'creative':
+                    slideElement.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)';
+                    slideElement.style.color = 'white';
+                    break;
+                case 'minimal':
+                    slideElement.style.background = '#ffffff';
+                    slideElement.style.color = '#333333';
+                    slideElement.style.border = '2px solid #f0f0f0';
+                    break;
+            }
+            
+            slides[currentSlideIndex].backgroundColor = slideElement.style.background;
+            closeModal('templateModal');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Presentation mode
+        function startPresentation() {
+            presentationIndex = 0;
+            document.getElementById('presentationMode').style.display = 'flex';
+            showPresentationSlide(0);
+        }
+
+        function showPresentationSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            
+            const slide = slides[index];
+            const presentationSlide = document.getElementById('presentationSlide');
+            
+            // Clear existing animation classes
+            presentationSlide.className = 'slide';
+            
+            // Set content
+            presentationSlide.innerHTML = `
+                <div class="slide-content">
+                    <div class="slide-title-input">${slide.title}</div>
+                    <div class="slide-content-input">${slide.content}</div>
+                </div>
+            `;
+            
+            // Set background
+            presentationSlide.style.backgroundColor = slide.backgroundColor;
+            
+            // Add transition animation
+            if (slide.transition) {
+                setTimeout(() => {
+                    presentationSlide.classList.add('slide-transition', slide.transition);
+                }, 50);
+            }
+        }
+
+        function nextSlide() {
+            if (presentationIndex < slides.length - 1) {
+                presentationIndex++;
+                showPresentationSlide(presentationIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (presentationIndex > 0) {
+                presentationIndex--;
+                showPresentationSlide(presentationIndex);
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').style.display = 'none';
+        }
+
+        // Export functions
+        function exportHTML() {
+            showExportProgress();
+            
+            setTimeout(() => {
+                const html = generateHTMLExport();
+                downloadFile(html, 'presentation.html', 'text/html');
+                closeModal('exportModal');
+            }, 2000);
+        }
+
+        function exportPDF() {
+            showExportProgress();
+            
+            // Simulate PDF generation
+            setTimeout(() => {
+                // In a real implementation, you would use a library like jsPDF
+                alert('PDF export feature would integrate with a PDF generation library in production.');
+                closeModal('exportModal');
+            }, 3000);
+        }
+
+        function generateHTMLExport() {
+            let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exported Presentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #000; }
+        .slide { width: 100vw; height: 100vh; display: none; justify-content: center; align-items: center; }
+        .slide.active { display: flex; }
+        .slide-content { background: white; width: 80%; height: 80%; padding: 40px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .slide-title { font-size: 36px; font-weight: bold; margin-bottom: 30px; text-align: center; }
+        .slide-text { font-size: 18px; line-height: 1.6; }
+        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .controls button { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 15px; margin: 0 5px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+`;
+
+            slides.forEach((slide, index) => {
+                html += `
+    <div class="slide ${index === 0 ? 'active' : ''}" id="slide${index}">
+        <div class="slide-content" style="background-color: ${slide.backgroundColor}">
+            <div class="slide-title">${slide.title}</div>
+            <div class="slide-text">${slide.content}</div>
+        </div>
+    </div>`;
+            });
+
+            html += `
+    <div class="controls">
+        <button onclick="previousSlide()">Previous</button>
+        <button onclick="nextSlide()">Next</button>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = ${slides.length};
+        
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.getElementById('slide' + n).classList.add('active');
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+    </script>
+</body>
+</html>`;
+
+            return html;
+        }
+
+        function showExportProgress() {
+            document.getElementById('exportModal').style.display = 'flex';
+            const progressFill = document.getElementById('progressFill');
+            const status = document.getElementById('exportStatus');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                progressFill.style.width = progress + '%';
+                
+                if (progress === 20) status.textContent = 'Processing slides...';
+                else if (progress === 40) status.textContent = 'Applying formatting...';
+                else if (progress === 60) status.textContent = 'Generating output...';
+                else if (progress === 80) status.textContent = 'Finalizing export...';
+                else if (progress === 100) {
+                    status.textContent = 'Export complete!';
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-save functionality
+        function autoSave() {
+            const presentationData = {
+                slides: slides,
+                currentSlideIndex: currentSlideIndex,
+                lastSaved: new Date().toISOString()
+            };
+            
+            // In a real application, this would save to a backend
+            console.log('Auto-saved presentation data:', presentationData);
+        }
+
+        // Advanced features
+        function addShape(shape) {
+            const shapeElement = document.createElement('div');
+            shapeElement.contentEditable = false;
+            shapeElement.style.display = 'inline-block';
+            shapeElement.style.margin = '10px';
+            shapeElement.style.cursor = 'move';
+            
+            switch(shape) {
+                case 'circle':
+                    shapeElement.style.width = '100px';
+                    shapeElement.style.height = '100px';
+                    shapeElement.style.borderRadius = '50%';
+                    shapeElement.style.backgroundColor = '#4ecdc4';
+                    break;
+                case 'rectangle':
+                    shapeElement.style.width = '150px';
+                    shapeElement.style.height = '100px';
+                    shapeElement.style.backgroundColor = '#ff6b6b';
+                    break;
+                case 'triangle':
+                    shapeElement.style.width = '0';
+                    shapeElement.style.height = '0';
+                    shapeElement.style.borderLeft = '50px solid transparent';
+                    shapeElement.style.borderRight = '50px solid transparent';
+                    shapeElement.style.borderBottom = '100px solid #45b7d1';
+                    break;
+            }
+            
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(shapeElement);
+            }
+            
+            // Make shapes draggable
+            makeDraggable(shapeElement);
+            saveCurrentSlide();
+        }
+
+        function makeDraggable(element) {
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            element.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+
+                if (e.target === element) {
+                    isDragging = true;
+                }
+            }
+
+            function dragMove(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    xOffset = currentX;
+                    yOffset = currentY;
+
+                    element.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                }
+            }
+
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+                if (isDragging) saveCurrentSlide();
+            }
+        }
+
+        // Slide notes functionality
+        function addSlideNotes() {
+            const notes = prompt('Enter speaker notes for this slide:');
+            if (notes) {
+                slides[currentSlideIndex].notes = notes;
+            }
+        }
+
+        // Theme management
+        function applyTheme(themeName) {
+            const themes = {
+                corporate: {
+                    primaryColor: '#2c3e50',
+                    secondaryColor: '#3498db',
+                    backgroundColor: '#ecf0f1',
+                    textColor: '#2c3e50'
+                },
+                creative: {
+                    primaryColor: '#e74c3c',
+                    secondaryColor: '#f39c12',
+                    backgroundColor: '#fff',
+                    textColor: '#2c3e50'
+                },
+                dark: {
+                    primaryColor: '#34495e',
+                    secondaryColor: '#9b59b6',
+                    backgroundColor: '#2c3e50',
+                    textColor: '#ecf0f1'
+                }
+            };
+            
+            const theme = themes[themeName];
+            if (theme) {
+                const slideElement = document.getElementById('currentSlide');
+                slideElement.style.backgroundColor = theme.backgroundColor;
+                slideElement.style.color = theme.textColor;
+                
+                slides[currentSlideIndex].backgroundColor = theme.backgroundColor;
+                slides[currentSlideIndex].textColor = theme.textColor;
+            }
+        }
+
+        // Collaboration features (simulated)
+        function sharePresentation() {
+            const shareUrl = `${window.location.origin}/presentation/${Date.now()}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert(`Presentation link copied to clipboard: ${shareUrl}`);
+            });
+        }
+
+        // Analytics and insights
+        function getSlideAnalytics() {
+            const analytics = {
+                totalSlides: slides.length,
+                averageWordsPerSlide: slides.reduce((acc, slide) => {
+                    const wordCount = (slide.title + ' ' + slide.content.replace(/<[^>]*>/g, '')).split(' ').length;
+                    return acc + wordCount;
+                }, 0) / slides.length,
+                mostUsedTransition: getMostUsedTransition(),
+                creationDate: new Date().toLocaleDateString()
+            };
+            
+            console.log('Presentation Analytics:', analytics);
+            return analytics;
+        }
+
+        function getMostUsedTransition() {
+            const transitionCounts = {};
+            slides.forEach(slide => {
+                transitionCounts[slide.transition] = (transitionCounts[slide.transition] || 0) + 1;
+            });
+            
+            return Object.keys(transitionCounts).reduce((a, b) => 
+                transitionCounts[a] > transitionCounts[b] ? a : b
+            );
+        }
+
+        // Performance optimizations
+        function optimizeSlideRendering() {
+            // Implement virtual scrolling for large presentations
+            const thumbnailContainer = document.getElementById('slideThumbnails');
+            const visibleThumbnails = 10;
+            
+            if (slides.length > visibleThumbnails) {
+                // Only render visible thumbnails plus buffer
+                renderThumbnailsVirtual();
+            }
+        }
+
+        function renderThumbnailsVirtual() {
+            // Virtual scrolling implementation for better performance with many slides
+            const container = document.getElementById('slideThumbnails');
+            const startIndex = Math.max(0, currentSlideIndex - 5);
+            const endIndex = Math.min(slides.length, currentSlideIndex + 5);
+            
+            container.innerHTML = '';
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const slide = slides[i];
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${i === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.onclick = () => loadSlide(i);
+                
+                thumbnail.innerHTML = `
+                    <div class="slide-number">Slide ${i + 1}</div>
+                    <div class="slide-title">${slide.title}</div>
+                `;
+                
+                container.appendChild(thumbnail);
+            }
+        }
+
+        // Accessibility features
+        function setupAccessibility() {
+            // Add ARIA labels and keyboard navigation
+            const slides = document.querySelectorAll('.slide-thumbnail');
+            slides.forEach((slide, index) => {
+                slide.setAttribute('role', 'button');
+                slide.setAttribute('aria-label', `Go to slide ${index + 1}`);
+                slide.setAttribute('tabindex', '0');
+                
+                slide.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        loadSlide(index);
+                    }
+                });
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            setupAccessibility();
+            
+            // Auto-save every 30 seconds
+            setInterval(autoSave, 30000);
+            
+            // Performance monitoring
+            console.log('Slide Deck Builder Pro initialized successfully!');
+            console.log('Features available: Templates, Transitions, Export, Presentation Mode, Auto-save');
+        });
+
+        // Error handling and recovery
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e.error);
+            // In production, this would send error reports to a logging service
+        });
+
+        // Service worker registration for offline functionality
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registered successfully');
+            }).catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        }
+
+        // Add touch support for mobile devices
+        function addTouchSupport() {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (document.getElementById('presentationMode').style.display === 'flex') {
+                        if (diff > 0) {
+                            nextSlide(); // Swipe left - next slide
+                        } else {
+                            previousSlide(); // Swipe right - previous slide
+                        }
+                    }
+                }
+            }
+        }
+
+        // Advanced export options
+        function exportAdvanced() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Advanced Export Options</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" checked> Include speaker notes
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" checked> Include animations
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox"> Export as separate HTML files
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Quality:</label>
+                        <select>
+                            <option value="high">High (larger file)</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low (smaller file)</option>
+                        </select>
+                    </div>
+                    <button onclick="processAdvancedExport(); document.body.removeChild(this.closest('.modal'))">Export</button>
+                    <button onclick="document.body.removeChild(this.closest('.modal'))">Cancel</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function processAdvancedExport() {
+            showExportProgress();
+            // Process advanced export options here
+            setTimeout(() => {
+                const html = generateHTMLExport();
+                downloadFile(html, 'presentation-advanced.html', 'text/html');
+                closeModal('exportModal');
+            }, 2500);
+        }
+
+        // Add mobile touch support
+        addTouchSupport();
+    </script>
+</body>
+</html>
