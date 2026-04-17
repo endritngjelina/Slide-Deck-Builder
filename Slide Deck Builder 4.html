@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Deck Pro - Professional Presentation Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-solid: #667eea;
+            --primary-hover: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            --secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --warning: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            
+            --bg-primary: #0a0b14;
+            --bg-secondary: #16171f;
+            --bg-tertiary: #1e1f2e;
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --bg-glass-hover: rgba(255, 255, 255, 0.1);
+            
+            --text-primary: #ffffff;
+            --text-secondary: #a0a9c0;
+            --text-muted: #6b7280;
+            
+            --border-primary: rgba(255, 255, 255, 0.1);
+            --border-secondary: rgba(255, 255, 255, 0.05);
+            
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 30px rgba(102, 126, 234, 0.3);
+            --shadow-neon: 0 0 20px rgba(245, 87, 108, 0.4);
+            
+            --blur: blur(20px);
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(245, 87, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            backdrop-filter: var(--blur);
+        }
+
+        /* Glassmorphism Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border-right: 1px solid var(--border-primary);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-glass);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--primary);
+            opacity: 0.5;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            background: var(--primary);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: rotate 6s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(45deg, #fff, #f0f9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header h1 i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-solid) transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: var(--primary-solid);
+            border-radius: 3px;
+        }
+
+        .slide-thumbnails {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .slide-thumbnail {
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+        }
+
+        .slide-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .slide-thumbnail:hover::before {
+            left: 100%;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: var(--primary-solid);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--shadow-glow);
+            background: var(--bg-glass-hover);
+        }
+
+        .slide-thumbnail.active {
+            border-color: var(--primary-solid);
+            background: var(--bg-glass-hover);
+            box-shadow: var(--shadow-glow);
+            transform: scale(1.05);
+        }
+
+        .slide-thumbnail.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .slide-preview {
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+        }
+
+        .slide-number {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .slide-controls {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(-10px);
+        }
+
+        .slide-thumbnail:hover .slide-controls {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .control-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            backdrop-filter: var(--blur);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+            box-shadow: var(--shadow-neon);
+        }
+
+        .delete-btn:hover {
+            box-shadow: 0 0 25px rgba(245, 87, 108, 0.6);
+        }
+
+        .add-slide-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .add-slide-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .add-slide-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-slide-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .add-slide-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Premium Main Editor */
+        .main-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+        }
+
+        .toolbar {
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border-bottom: 1px solid var(--border-primary);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: var(--shadow-glass);
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .toolbar::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--primary);
+            opacity: 0.3;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-right: 20px;
+            border-right: 1px solid var(--border-primary);
+            position: relative;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            margin-left: auto;
+        }
+
+        .toolbar-btn {
+            padding: 12px 20px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toolbar-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .toolbar-btn:hover::before {
+            left: 100%;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--primary-solid);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-solid);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .export-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #3d8bfe 0%, #00d4fe 100%);
+            box-shadow: 0 0 30px rgba(79, 172, 254, 0.5);
+        }
+
+        /* Futuristic Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            background: var(--bg-primary);
+            padding: 40px;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .editor-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(102, 126, 234, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 75% 75%, rgba(245, 87, 108, 0.1) 0%, transparent 25%);
+            pointer-events: none;
+        }
+
+        .slide-canvas {
+            width: 900px;
+            height: 675px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: var(--blur);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-premium);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .slide-canvas:hover {
+            box-shadow: 
+                var(--shadow-premium),
+                0 0 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .slide-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.1) 50%, transparent 51%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            width: 100%;
+            height: 100%;
+            padding: 48px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide-element {
+            position: absolute;
+            cursor: move;
+            border: 2px solid transparent;
+            min-height: 30px;
+            min-width: 100px;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+
+        .slide-element:hover {
+            border-color: var(--primary-solid);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+            transform: scale(1.02);
+        }
+
+        .slide-element.selected {
+            border-color: var(--primary-solid);
+            border-style: dashed;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+            animation: selectedPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes selectedPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(102, 126, 234, 0.6); }
+        }
+
+        .element-controls {
+            position: absolute;
+            top: -35px;
+            right: 0;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(-5px);
+        }
+
+        .slide-element:hover .element-controls,
+        .slide-element.selected .element-controls {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .text-element {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--bg-primary);
+            outline: none;
+            resize: none;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .text-element:focus {
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .heading-element {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--bg-primary);
+            background: linear-gradient(135deg, #1e293b, #334155);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .bullet-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .bullet-list li {
+            margin-bottom: 12px;
+            font-size: 16px;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .bullet-list li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: var(--primary-solid);
+            font-size: 0.8em;
+        }
+
+        .image-element {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .image-element:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .shape-element {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Premium Properties Panel */
+        .properties-panel {
+            width: 300px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border-left: 1px solid var(--border-primary);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-glass);
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-solid) transparent;
+            z-index: 10;
+        }
+
+        .properties-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .properties-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .properties-panel::-webkit-scrollbar-thumb {
+            background: var(--primary-solid);
+            border-radius: 3px;
+        }
+
+        .property-group {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: var(--bg-glass);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-primary);
+            backdrop-filter: var(--blur);
+        }
+
+        .property-group h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .property-group h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .property-item {
+            margin-bottom: 16px;
+        }
+
+        .property-item label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            letter-spacing: 0.02em;
+        }
+
+        .property-item input,
+        .property-item select,
+        .property-item textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .property-item input:focus,
+        .property-item select:focus,
+        .property-item textarea:focus {
+            outline: none;
+            border-color: var(--primary-solid);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            background: var(--bg-glass-hover);
+        }
+
+        .color-input {
+            height: 48px;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+
+        /* Futuristic Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: var(--blur);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: var(--shadow-premium);
+            position: relative;
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            background: var(--primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+
+        /* Epic Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0b14 0%, #16171f 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+            animation: presentationFadeIn 0.5s ease;
+        }
+
+        @keyframes presentationFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .presentation-slide {
+            width: 90vw;
+            height: 90vh;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            display: none;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .presentation-slide.active {
+            display: block;
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            padding: 16px 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border-primary);
+            box-shadow: var(--shadow-glass);
+        }
+
+        .presentation-btn {
+            padding: 12px 20px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .presentation-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Enhanced Animations */
+        @keyframes slideInRight {
+            from { transform: translateX(100%) rotateY(45deg); opacity: 0; }
+            to { transform: translateX(0) rotateY(0deg); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%) rotateY(-45deg); opacity: 0; }
+            to { transform: translateX(0) rotateY(0deg); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8) rotateZ(-5deg); opacity: 0; }
+            to { transform: scale(1) rotateZ(0deg); opacity: 1; }
+        }
+
+        .slide-transition-slideRight { 
+            animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        .slide-transition-slideLeft { 
+            animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        .slide-transition-fade { 
+            animation: fadeIn 0.6s ease-out; 
+        }
+        
+        .slide-transition-zoom { 
+            animation: zoomIn 0.7s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        /* Premium Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar { width: 280px; }
+            .properties-panel { width: 260px; }
+            .slide-canvas { width: 700px; height: 525px; }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 250px; }
+            .properties-panel { width: 240px; }
+            .slide-canvas { width: 600px; height: 450px; }
+            .toolbar-btn { padding: 10px 16px; font-size: 0.85rem; }
+        }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; height: 100vh; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                max-height: 200px;
+                order: 2;
+            }
+            .properties-panel { 
+                width: 100%; 
+                height: auto; 
+                max-height: 150px;
+                order: 3;
+            }
+            .main-editor { order: 1; }
+            .slide-canvas { width: 95%; height: 300px; }
+            .toolbar { flex-wrap: wrap; padding: 12px; }
+            .toolbar-group { border-right: none; padding-right: 0; margin-bottom: 8px; }
+            .sidebar-header h1 { font-size: 1.4rem; }
+        }
+
+        /* Premium Loading States */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.saving {
+            background: var(--warning);
+        }
+
+        .status-indicator.saved {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Context menu styling */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 160px;
+            box-shadow: var(--shadow-premium);
+            z-index: 2000;
+            animation: contextMenuAppear 0.2s ease;
+        }
+
+        @keyframes contextMenuAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-menu-item:hover {
+            background: var(--bg-glass-hover);
+            color: var(--primary-solid);
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: var(--border-primary);
+            margin: 4px 0;
+        }
+
+        /* Enhanced drag feedback */
+        .dragging {
+            opacity: 0.8;
+            transform: rotate(5deg) scale(1.05);
+            z-index: 1000;
+            box-shadow: var(--shadow-premium);
+        }
+
+        /* Selection rectangle */
+        .selection-rectangle {
+            position: absolute;
+            border: 2px dashed var(--primary-solid);
+            background: rgba(102, 126, 234, 0.1);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Premium notification system */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-glass);
+            z-index: 3000;
+            animation: notificationSlideIn 0.4s ease;
+            max-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes notificationSlideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            border-left: 4px solid #4ade80;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f87171;
+        }
+
+        .notification.warning {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--primary-solid);
+        }
+
+        /* Grid overlay for precise positioning */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(rgba(102, 126, 234, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(102, 126, 234, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .show-grid .grid-overlay {
+            opacity: 1;
+        }
+
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-premium);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Tutorial overlay */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tutorial-content {
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur);
+            border-radius: var(--border-radius-lg);
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: var(--shadow-premium);
+        }
+
+        .tutorial-steps {
+            margin: 20px 0;
+        }
+
+        .tutorial-step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+
+        .tutorial-step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .tutorial-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-presentation"></i> Slide Deck Pro</h1>
+            </div>
+            <div class="sidebar-content">
+                <div class="slide-thumbnails" id="slideThumbnails">
+                    <!-- Slide thumbnails will be populated here -->
+                </div>
+                <button class="add-slide-btn" onclick="addSlide()">
+                    <i class="fas fa-plus"></i> Add New Slide
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Editor -->
+        <div class="main-editor">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="addTextElement()" data-tooltip="Add Text Element">
+                        <i class="fas fa-font"></i> Text
+                    </button>
+                    <button class="toolbar-btn" onclick="addHeadingElement()" data-tooltip="Add Heading">
+                        <i class="fas fa-heading"></i> Heading
+                    </button>
+                    <button class="toolbar-btn" onclick="addBulletList()" data-tooltip="Add Bullet List">
+                        <i class="fas fa-list"></i> Bullets
+                    </button>
+                    <button class="toolbar-btn" onclick="addImageElement()" data-tooltip="Add Image">
+                        <i class="fas fa-image"></i> Image
+                    </button>
+                    <button class="toolbar-btn" onclick="addShapeElement()" data-tooltip="Add Shape">
+                        <i class="fas fa-square"></i> Shape
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="previewSlides()" data-tooltip="Preview Presentation">
+                        <i class="fas fa-eye"></i> Preview
+                    </button>
+                    <button class="toolbar-btn" onclick="showTransitionModal()" data-tooltip="Slide Transitions">
+                        <i class="fas fa-bolt"></i> Transitions
+                    </button>
+                    <button class="toolbar-btn" onclick="toggleGrid()" data-tooltip="Toggle Grid" id="gridToggle">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button class="toolbar-btn" onclick="duplicateSlide()" data-tooltip="Duplicate Slide">
+                        <i class="fas fa-copy"></i> Duplicate
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn export-btn" onclick="exportAsHTML()" data-tooltip="Export as HTML">
+                        <i class="fas fa-file-code"></i> Export HTML
+                    </button>
+                    <button class="toolbar-btn" onclick="showTutorial()" data-tooltip="Show Tutorial">
+                        <i class="fas fa-question-circle"></i> Tutorial
+                    </button>
+                    <button class="toolbar-btn" onclick="showKeyboardShortcuts()" data-tooltip="Keyboard Shortcuts">
+                        <i class="fas fa-keyboard"></i> Shortcuts
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-area" id="editorArea">
+                <div class="grid-overlay" id="gridOverlay"></div>
+                <div class="slide-canvas" id="slideCanvas">
+                    <div class="slide-content" id="slideContent">
+                        <!-- Slide content will be populated here -->
+                    </div>
+                </div>
+                <!-- Status indicator -->
+                <div class="status-indicator saved" id="statusIndicator"></div>
+                <!-- Floating action button for quick actions -->
+                <button class="fab" onclick="showQuickActions()" data-tooltip="Quick Actions">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel">
+            <div class="property-group">
+                <h3><i class="fas fa-sliders-h"></i> Slide Properties</h3>
+                <div class="property-item">
+                    <label>Background Color</label>
+                    <input type="color" class="color-input" id="slideBackground" value="#ffffff" onchange="updateSlideBackground()">
+                </div>
+                <div class="property-item">
+                    <label>Transition Effect</label>
+                    <select id="slideTransition" onchange="updateSlideTransition()">
+                        <option value="fade">Fade</option>
+                        <option value="slideRight">Slide Right</option>
+                        <option value="slideLeft">Slide Left</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                <div class="property-item">
+                    <label>Duration (seconds)</label>
+                    <input type="range" id="slideDuration" min="0.5" max="5" step="0.1" value="1" onchange="updateSlideDuration()">
+                    <span id="durationValue">1.0s</span>
+                </div>
+            </div>
+
+            <div class="property-group" id="elementProperties" style="display: none;">
+                <h3><i class="fas fa-object-group"></i> Element Properties</h3>
+                <div class="property-item">
+                    <label>Font Size</label>
+                    <input type="range" id="elementFontSize" min="8" max="72" value="16" onchange="updateElementStyle()">
+                    <span id="fontSizeValue">16px</span>
+                </div>
+                <div class="property-item">
+                    <label>Font Color</label>
+                    <input type="color" class="color-input" id="elementColor" value="#1e293b" onchange="updateElementStyle()">
+                </div>
+                <div class="property-item">
+                    <label>Background</label>
+                    <input type="color" class="color-input" id="elementBackground" value="transparent" onchange="updateElementStyle()">
+                </div>
+                <div class="property-item">
+                    <label>Font Weight</label>
+                    <select id="elementFontWeight" onchange="updateElementStyle()">
+                        <option value="300">Light</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="600">Semi Bold</option>
+                        <option value="bold">Bold</option>
+                        <option value="800">Extra Bold</option>
+                    </select>
+                </div>
+                <div class="property-item">
+                    <label>Text Align</label>
+                    <select id="elementTextAlign" onchange="updateElementStyle()">
+                        <option value="left" selected>Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                        <option value="justify">Justify</option>
+                    </select>
+                </div>
+                <div class="property-item">
+                    <label>Opacity</label>
+                    <input type="range" id="elementOpacity" min="0" max="1" step="0.1" value="1" onchange="updateElementStyle()">
+                    <span id="opacityValue">100%</span>
+                </div>
+                <div class="property-item">
+                    <label>Border Radius</label>
+                    <input type="range" id="elementBorderRadius" min="0" max="50" value="0" onchange="updateElementStyle()">
+                    <span id="borderRadiusValue">0px</span>
+                </div>
+                <div class="property-item">
+                    <label>Shadow</label>
+                    <select id="elementShadow" onchange="updateElementStyle()">
+                        <option value="none" selected>None</option>
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                        <option value="glow">Glow</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transition Modal -->
+    <div class="modal" id="transitionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-bolt"></i> Slide Transitions</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <p>Select a transition effect for your slides:</p>
+            <div style="margin: 20px 0;">
+                <label><input type="radio" name="transition" value="fade" checked> Fade</label><br>
+                <label><input type="radio" name="transition" value="slideRight"> Slide Right</label><br>
+                <label><input type="radio" name="transition" value="slideLeft"> Slide Left</label><br>
+                <label><input type="radio" name="transition" value="zoom"> Zoom</label>
+            </div>
+            <button class="toolbar-btn" onclick="applyTransition()">Apply Transition</button>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="presentation-controls">
+            <button class="presentation-btn" onclick="previousSlide()"><i class="fas fa-arrow-left"></i> Previous</button>
+            <button class="presentation-btn" onclick="nextSlide()">Next <i class="fas fa-arrow-right"></i></button>
+            <button class="presentation-btn" onclick="exitPresentation()"><i class="fas fa-times"></i> Exit</button>
+        </div>
+        <div id="presentationSlides">
+            <!-- Presentation slides will be populated here -->
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-graduation-cap"></i> Slide Deck Pro Tutorial</h2>
+                <button class="close-btn" onclick="closeTutorial()">&times;</button>
+            </div>
+            <div class="tutorial-steps">
+                <div class="tutorial-step">
+                    <div class="tutorial-step-number">1</div>
+                    <div>
+                        <h4>Create Slides</h4>
+                        <p>Add new slides using the "Add New Slide" button. Each slide can have a unique background and transition.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="tutorial-step-number">2</div>
+                    <div>
+                        <h4>Add Content</h4>
+                        <p>Use the toolbar to add text, headings, bullet lists, images, and shapes to your slides.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="tutorial-step-number">3</div>
+                    <div>
+                        <h4>Customize Elements</h4>
+                        <p>Select any element to customize its appearance using the properties panel on the right.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="tutorial-step-number">4</div>
+                    <div>
+                        <h4>Preview & Export</h4>
+                        <p>Preview your presentation with transitions, then export it as HTML to share with others.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tutorial-navigation">
+                <button class="toolbar-btn" onclick="closeTutorial()">Get Started</button>
+                <button class="toolbar-btn export-btn" onclick="showKeyboardShortcuts()">View Shortcuts</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let slides = [
+            {
+                id: 1,
+                elements: [],
+                background: '#ffffff',
+                transition: 'fade',
+                animation: 'none',
+                duration: 1
+            }
+        ];
+        let currentSlideIndex = 0;
+        let selectedElement = null;
+        let draggedElement = null;
+        let elementCounter = 0;
+        let presentationSlideIndex = 0;
+        let isGridVisible = false;
+        let undoStack = [];
+        let redoStack = [];
+        let notifications = [];
+        let dragStartX, dragStartY;
+
+        // Initialize Application
+        function init() {
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            setupEventListeners();
+            showNotification('Welcome to Slide Deck Pro! 🚀', 'info');
+            setupAutoSave();
+            
+            // Add welcome slide content
+            addWelcomeContent();
+        }
+
+        // Add welcome content to first slide
+        function addWelcomeContent() {
+            const heading = {
+                id: ++elementCounter,
+                type: 'heading',
+                content: 'Professional Presentations',
+                x: 100,
+                y: 100,
+                fontSize: 48,
+                color: '#667eea',
+                backgroundColor: 'transparent',
+                fontWeight: '800',
+                textAlign: 'center',
+                opacity: 1,
+                borderRadius: 0,
+                shadow: 'glow'
+            };
+            
+            const subtext = {
+                id: ++elementCounter,
+                type: 'text',
+                content: 'Create stunning presentations with our professional-grade slide deck builder\nImpressive transitions • Drag & drop • Real-time collaboration',
+                x: 100,
+                y: 200,
+                fontSize: 24,
+                color: '#64748b',
+                backgroundColor: 'transparent',
+                fontWeight: '400',
+                textAlign: 'center',
+                opacity: 0.9,
+                borderRadius: 0,
+                shadow: 'small'
+            };
+            
+            slides[0].elements = [heading, subtext];
+            renderCurrentSlide();
+        }
+
+        // Enhanced Event Listeners
+        function setupEventListeners() {
+            document.addEventListener('keydown', handleKeyboard);
+            document.addEventListener('contextmenu', handleContextMenu);
+            
+            const slideContent = document.getElementById('slideContent');
+            slideContent.addEventListener('click', function(e) {
+                if (e.target === slideContent) {
+                    deselectElement();
+                }
+            });
+
+            // Drag and drop for files
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('drop', handleFileDrop);
+        }
+
+        function handleKeyboard(e) {
+            // Enhanced keyboard shortcuts
+            if (e.key === 'Delete' && selectedElement) {
+                deleteElement(selectedElement.dataset.elementId);
+            }
+            if (e.key === 'Escape') {
+                exitPresentation();
+                closeModal();
+                deselectElement();
+            }
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        exportAsHTML();
+                        break;
+                    case 'z':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            redo();
+                        } else {
+                            undo();
+                        }
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        duplicateSlide();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        addSlide();
+                        break;
+                }
+            }
+            if (e.key === 'g' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                toggleGrid();
+            }
+        }
+
+        function handleContextMenu(e) {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            for (let file of files) {
+                if (file.type.startsWith('image/')) {
+                    loadImageFromFile(file);
+                }
+            }
+        }
+
+        // Premium Notification System
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            let icon = 'fa-info-circle';
+            if (type === 'success') icon = 'fa-check-circle';
+            if (type === 'warning') icon = 'fa-exclamation-triangle';
+            if (type === 'error') icon = 'fa-exclamation-circle';
+            
+            notification.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'notificationSlideOut 0.4s ease forwards';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 400);
+            }, duration);
+        }
+
+        // Enhanced Slide Management
+        function addSlide() {
+            saveState();
+            const newSlide = {
+                id: Date.now(),
+                elements: [],
+                background: '#ffffff',
+                transition: 'fade',
+                animation: 'none',
+                duration: 1
+            };
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            showNotification('New slide added! ✨', 'success');
+        }
+
+        function deleteSlide(slideIndex) {
+            if (slides.length > 1) {
+                saveState();
+                slides.splice(slideIndex, 1);
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = slides.length - 1;
+                }
+                renderSlideThumbnails();
+                renderCurrentSlide();
+                showNotification('Slide deleted', 'warning');
+            }
+        }
+
+        function selectSlide(slideIndex) {
+            currentSlideIndex = slideIndex;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            deselectElement();
+            showNotification(`Slide ${slideIndex + 1} selected`, 'info');
+        }
+
+        function renderSlideThumbnails() {
+            const container = document.getElementById('slideThumbnails');
+            container.innerHTML = '';
+
+            slides.forEach((slide, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${index === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.onclick = () => selectSlide(index);
+
+                thumbnail.innerHTML = `
+                    <div class="slide-preview" style="background: ${slide.background}">
+                        ${slide.elements.length > 0 ? 'Slide Content' : 'Empty Slide'}
+                    </div>
+                    <div class="slide-number">Slide ${index + 1}</div>
+                    <div class="slide-controls">
+                        ${slides.length > 1 ? `<button class="control-btn delete-btn" onclick="event.stopPropagation(); deleteSlide(${index})"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(thumbnail);
+            });
+        }
+
+        function duplicateSlide() {
+            saveState();
+            const currentSlide = slides[currentSlideIndex];
+            const duplicatedSlide = {
+                id: Date.now(),
+                elements: JSON.parse(JSON.stringify(currentSlide.elements)),
+                background: currentSlide.background,
+                transition: currentSlide.transition,
+                animation: currentSlide.animation,
+                duration: currentSlide.duration
+            };
+            
+            // Update element IDs to avoid conflicts
+            duplicatedSlide.elements.forEach(element => {
+                element.id = ++elementCounter;
+            });
+            
+            slides.splice(currentSlideIndex + 1, 0, duplicatedSlide);
+            currentSlideIndex++;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            showNotification('Slide duplicated! 📄', 'success');
+        }
+
+        // Premium Element Management
+        function addTextElement() {
+            saveState();
+            const element = {
+                id: ++elementCounter,
+                type: 'text',
+                content: 'Click to edit text',
+                x: 100 + Math.random() * 200,
+                y: 100 + Math.random() * 200,
+                fontSize: 16,
+                color: '#1e293b',
+                backgroundColor: 'transparent',
+                fontWeight: 'normal',
+                textAlign: 'left',
+                opacity: 1,
+                borderRadius: 0,
+                shadow: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+            showNotification('Text element added', 'success');
+        }
+
+        function addHeadingElement() {
+            saveState();
+            const element = {
+                id: ++elementCounter,
+                type: 'heading',
+                content: 'Your Heading Here',
+                x: 100 + Math.random() * 200,
+                y: 50 + Math.random() * 100,
+                fontSize: 36,
+                color: '#1e293b',
+                backgroundColor: 'transparent',
+                fontWeight: 'bold',
+                textAlign: 'left',
+                opacity: 1,
+                borderRadius: 0,
+                shadow: 'medium'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+            showNotification('Heading added', 'success');
+        }
+
+        function addBulletList() {
+            saveState();
+            const element = {
+                id: ++elementCounter,
+                type: 'bullets',
+                content: ['First bullet point', 'Second bullet point', 'Third bullet point'],
+                x: 100 + Math.random() * 200,
+                y: 200 + Math.random() * 200,
+                fontSize: 16,
+                color: '#1e293b',
+                backgroundColor: 'transparent',
+                fontWeight: 'normal',
+                textAlign: 'left',
+                opacity: 1,
+                borderRadius: 0,
+                shadow: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+            showNotification('Bullet list added', 'success');
+        }
+
+        function addShapeElement() {
+            saveState();
+            const element = {
+                id: ++elementCounter,
+                type: 'shape',
+                shape: 'rectangle',
+                x: 200 + Math.random() * 200,
+                y: 200 + Math.random() * 200,
+                width: 150,
+                height: 100,
+                color: '#667eea',
+                backgroundColor: '#667eea',
+                opacity: 0.8,
+                borderRadius: 8,
+                shadow: 'medium'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+            showNotification('Shape added', 'success');
+        }
+
+        function loadImageFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                saveState();
+                const element = {
+                    id: ++elementCounter,
+                    type: 'image',
+                    content: event.target.result,
+                    x: 150 + Math.random() * 200,
+                    y: 150 + Math.random() * 200,
+                    width: 200,
+                    height: 150,
+                    opacity: 1,
+                    borderRadius: 8,
+                    shadow: 'medium'
+                };
+                
+                slides[currentSlideIndex].elements.push(element);
+                renderCurrentSlide();
+                showNotification('Image added from file', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addImageElement() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    loadImageFromFile(file);
+                }
+            };
+            input.click();
+        }
+
+        function deleteElement(elementId) {
+            saveState();
+            const slide = slides[currentSlideIndex];
+            slide.elements = slide.elements.filter(el => el.id != elementId);
+            renderCurrentSlide();
+            deselectElement();
+            showNotification('Element deleted', 'warning');
+        }
+
+        function selectElement(element) {
+            deselectElement();
+            selectedElement = element;
+            element.classList.add('selected');
+            showElementProperties();
+        }
+
+        function deselectElement() {
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+                selectedElement = null;
+                hideElementProperties();
+            }
+        }
+
+        // Rendering
+        function renderCurrentSlide() {
+            const slideContent = document.getElementById('slideContent');
+            const slide = slides[currentSlideIndex];
+            
+            slideContent.innerHTML = '';
+            slideContent.style.background = slide.background;
+
+            slide.elements.forEach(element => {
+                const elementDiv = createElementDiv(element);
+                slideContent.appendChild(elementDiv);
+            });
+
+            updateSlideProperties();
+        }
+
+        function createElementDiv(element) {
+            const div = document.createElement('div');
+            div.className = 'slide-element';
+            div.dataset.elementId = element.id;
+            div.style.left = element.x + 'px';
+            div.style.top = element.y + 'px';
+            div.style.opacity = element.opacity || 1;
+            div.style.borderRadius = (element.borderRadius || 0) + 'px';
+
+            // Apply shadow effects
+            const shadows = {
+                'none': 'none',
+                'small': '0 2px 4px rgba(0,0,0,0.1)',
+                'medium': '0 4px 8px rgba(0,0,0,0.15)',
+                'large': '0 8px 16px rgba(0,0,0,0.2)',
+                'glow': '0 0 20px rgba(102, 126, 234, 0.4)'
+            };
+            div.style.boxShadow = shadows[element.shadow] || 'none';
+
+            div.innerHTML = `
+                <div class="element-controls">
+                    <button class="control-btn delete-btn" onclick="deleteElement(${element.id})" data-tooltip="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+
+            if (element.type === 'text' || element.type === 'heading') {
+                const textArea = document.createElement('textarea');
+                textArea.className = element.type === 'heading' ? 'text-element heading-element' : 'text-element';
+                textArea.value = element.content;
+                textArea.style.fontSize = element.fontSize + 'px';
+                textArea.style.color = element.color;
+                textArea.style.backgroundColor = element.backgroundColor;
+                textArea.style.fontWeight = element.fontWeight;
+                textArea.style.textAlign = element.textAlign;
+                textArea.style.width = (element.width || 300) + 'px';
+                textArea.style.height = 'auto';
+                textArea.style.borderRadius = (element.borderRadius || 0) + 'px';
+                
+                textArea.oninput = function() {
+                    element.content = this.value;
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                };
+                
+                div.appendChild(textArea);
+                
+                setTimeout(() => {
+                    textArea.style.height = textArea.scrollHeight + 'px';
+                }, 0);
+                
+            } else if (element.type === 'bullets') {
+                const ul = document.createElement('ul');
+                ul.className = 'bullet-list';
+                ul.style.fontSize = element.fontSize + 'px';
+                ul.style.color = element.color;
+                ul.style.backgroundColor = element.backgroundColor;
+                ul.style.fontWeight = element.fontWeight;
+                ul.style.borderRadius = (element.borderRadius || 0) + 'px';
+                ul.style.padding = '12px';
+                
+                element.content.forEach((bullet, index) => {
+                    const li = document.createElement('li');
+                    li.contentEditable = true;
+                    li.textContent = bullet;
+                    li.oninput = function() {
+                        element.content[index] = this.textContent;
+                    };
+                    ul.appendChild(li);
+                });
+                
+                div.appendChild(ul);
+                
+            } else if (element.type === 'image') {
+                const img = document.createElement('img');
+                img.className = 'image-element';
+                img.src = element.content;
+                img.style.width = (element.width || 200) + 'px';
+                img.style.height = (element.height || 150) + 'px';
+                img.style.borderRadius = (element.borderRadius || 0) + 'px';
+                div.appendChild(img);
+                
+            } else if (element.type === 'shape') {
+                const shape = document.createElement('div');
+                shape.className = 'shape-element';
+                shape.style.width = (element.width || 150) + 'px';
+                shape.style.height = (element.height || 100) + 'px';
+                shape.style.backgroundColor = element.backgroundColor || element.color;
+                shape.style.borderRadius = (element.borderRadius || 0) + 'px';
+                shape.textContent = element.shape.charAt(0).toUpperCase() + element.shape.slice(1);
+                
+                div.appendChild(shape);
+            }
+
+            // Enhanced drag functionality with visual feedback
+            div.onmousedown = function(e) {
+                if (e.target.classList.contains('control-btn')) return;
+                
+                selectElement(div);
+                div.classList.add('dragging');
+                
+                const rect = div.getBoundingClientRect();
+                const slideRect = document.getElementById('slideContent').getBoundingClientRect();
+                
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+
+                function onMouseMove(e) {
+                    const newX = e.clientX - slideRect.left - offsetX;
+                    const newY = e.clientY - slideRect.top - offsetY;
+                    
+                    // Snap to grid if enabled
+                    let snapX = newX;
+                    let snapY = newY;
+                    
+                    if (isGridVisible) {
+                        snapX = Math.round(newX / 20) * 20;
+                        snapY = Math.round(newY / 20) * 20;
+                    }
+                    
+                    div.style.left = Math.max(0, snapX) + 'px';
+                    div.style.top = Math.max(0, snapY) + 'px';
+                    
+                    element.x = Math.max(0, snapX);
+                    element.y = Math.max(0, snapY);
+                }
+
+                function onMouseUp() {
+                    div.classList.remove('dragging');
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveState();
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+
+            return div;
+        }
+
+        // Undo/Redo System
+        function saveState() {
+            undoStack.push(JSON.parse(JSON.stringify({
+                slides: slides,
+                currentSlideIndex: currentSlideIndex
+            })));
+            
+            if (undoStack.length > 50) {
+                undoStack.shift();
+            }
+            
+            redoStack = [];
+            updateStatusIndicator('saving');
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(JSON.parse(JSON.stringify({
+                    slides: slides,
+                    currentSlideIndex: currentSlideIndex
+                })));
+                
+                const previousState = undoStack.pop();
+                slides = previousState.slides;
+                currentSlideIndex = previousState.currentSlideIndex;
+                
+                renderSlideThumbnails();
+                renderCurrentSlide();
+                showNotification('Undone', 'info');
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(JSON.parse(JSON.stringify({
+                    slides: slides,
+                    currentSlideIndex: currentSlideIndex
+                })));
+                
+                const nextState = redoStack.pop();
+                slides = nextState.slides;
+                currentSlideIndex = nextState.currentSlideIndex;
+                
+                renderSlideThumbnails();
+                renderCurrentSlide();
+                showNotification('Redone', 'info');
+            }
+        }
+
+        // Enhanced UI Functions
+        function toggleGrid() {
+            isGridVisible = !isGridVisible;
+            const editorArea = document.getElementById('editorArea');
+            const gridToggle = document.getElementById('gridToggle');
+            
+            if (isGridVisible) {
+                editorArea.classList.add('show-grid');
+                gridToggle.classList.add('active');
+                showNotification('Grid enabled', 'info');
+            } else {
+                editorArea.classList.remove('show-grid');
+                gridToggle.classList.remove('active');
+                showNotification('Grid disabled', 'info');
+            }
+        }
+
+        function updateStatusIndicator(status) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.className = `status-indicator ${status}`;
+            
+            if (status === 'saving') {
+                setTimeout(() => {
+                    indicator.className = 'status-indicator saved';
+                }, 1000);
+            }
+        }
+
+        function showQuickActions() {
+            const actions = [
+                { label: 'Add Text', icon: 'fa-font', action: addTextElement },
+                { label: 'Add Image', icon: 'fa-image', action: addImageElement },
+                { label: 'Add Shape', icon: 'fa-square', action: addShapeElement },
+                { label: 'Duplicate Slide', icon: 'fa-copy', action: duplicateSlide },
+                { label: 'Preview', icon: 'fa-eye', action: previewSlides }
+            ];
+            
+            showContextMenu(window.innerWidth - 200, window.innerHeight - 300, actions);
+        }
+
+        function showContextMenu(x, y, customActions = null) {
+            // Remove existing context menu
+            const existingMenu = document.querySelector('.context-menu');
+            if (existingMenu) {
+                document.body.removeChild(existingMenu);
+            }
+
+            const menu = document.createElement('div');
+            menu.className = 'context-menu';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+
+            const actions = customActions || [
+                { label: 'Add Text', icon: 'fa-font', action: addTextElement },
+                { label: 'Add Heading', icon: 'fa-heading', action: addHeadingElement },
+                { label: 'Add Bullets', icon: 'fa-list', action: addBulletList },
+                { label: 'Add Image', icon: 'fa-image', action: addImageElement },
+                { label: 'Add Shape', icon: 'fa-square', action: addShapeElement },
+                { separator: true },
+                { label: 'Duplicate Slide', icon: 'fa-copy', action: duplicateSlide },
+                { label: 'Delete Slide', icon: 'fa-trash', action: () => deleteSlide(currentSlideIndex) },
+                { separator: true },
+                { label: 'Toggle Grid', icon: 'fa-th', action: toggleGrid },
+                { label: 'Preview', icon: 'fa-eye', action: previewSlides }
+            ];
+
+            actions.forEach(action => {
+                if (action.separator) {
+                    const separator = document.createElement('div');
+                    separator.className = 'context-menu-separator';
+                    menu.appendChild(separator);
+                } else {
+                    const item = document.createElement('div');
+                    item.className = 'context-menu-item';
+                    item.innerHTML = `<i class="fas ${action.icon}"></i> ${action.label}`;
+                    item.onclick = () => {
+                        action.action();
+                        document.body.removeChild(menu);
+                    };
+                    menu.appendChild(item);
+                }
+            });
+
+            document.body.appendChild(menu);
+
+            // Remove menu when clicking elsewhere
+            setTimeout(() => {
+                document.addEventListener('click', function removeMenu() {
+                    if (document.body.contains(menu)) {
+                        document.body.removeChild(menu);
+                    }
+                    document.removeEventListener('click', removeMenu);
+                }, 100);
+            });
+        }
+
+        // Enhanced Properties Panel
+        function showElementProperties() {
+            const panel = document.getElementById('elementProperties');
+            panel.style.display = 'block';
+            
+            if (selectedElement) {
+                const elementId = selectedElement.dataset.elementId;
+                const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+                
+                if (element) {
+                    document.getElementById('elementFontSize').value = element.fontSize || 16;
+                    document.getElementById('fontSizeValue').textContent = (element.fontSize || 16) + 'px';
+                    document.getElementById('elementColor').value = element.color || '#1e293b';
+                    document.getElementById('elementBackground').value = element.backgroundColor || 'transparent';
+                    document.getElementById('elementFontWeight').value = element.fontWeight || 'normal';
+                    document.getElementById('elementTextAlign').value = element.textAlign || 'left';
+                    document.getElementById('elementOpacity').value = element.opacity || 1;
+                    document.getElementById('opacityValue').textContent = Math.round((element.opacity || 1) * 100) + '%';
+                    document.getElementById('elementBorderRadius').value = element.borderRadius || 0;
+                    document.getElementById('borderRadiusValue').textContent = (element.borderRadius || 0) + 'px';
+                    document.getElementById('elementShadow').value = element.shadow || 'none';
+                }
+            }
+        }
+
+        function hideElementProperties() {
+            document.getElementById('elementProperties').style.display = 'none';
+        }
+
+        function updateElementStyle() {
+            if (!selectedElement) return;
+            
+            saveState();
+            const elementId = selectedElement.dataset.elementId;
+            const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+            
+            if (element) {
+                element.fontSize = parseInt(document.getElementById('elementFontSize').value);
+                element.color = document.getElementById('elementColor').value;
+                element.backgroundColor = document.getElementById('elementBackground').value;
+                element.fontWeight = document.getElementById('elementFontWeight').value;
+                element.textAlign = document.getElementById('elementTextAlign').value;
+                element.opacity = parseFloat(document.getElementById('elementOpacity').value);
+                element.borderRadius = parseInt(document.getElementById('elementBorderRadius').value);
+                element.shadow = document.getElementById('elementShadow').value;
+                
+                // Update display values
+                document.getElementById('fontSizeValue').textContent = element.fontSize + 'px';
+                document.getElementById('opacityValue').textContent = Math.round(element.opacity * 100) + '%';
+                document.getElementById('borderRadiusValue').textContent = element.borderRadius + 'px';
+                
+                renderCurrentSlide();
+                
+                // Re-select the element after re-render
+                setTimeout(() => {
+                    const newElement = document.querySelector(`[data-element-id="${elementId}"]`);
+                    if (newElement) selectElement(newElement);
+                }, 0);
+            }
+        }
+
+        function updateSlideBackground() {
+            const color = document.getElementById('slideBackground').value;
+            slides[currentSlideIndex].background = color;
+            document.getElementById('slideContent').style.background = color;
+            renderSlideThumbnails();
+            saveState();
+        }
+
+        function updateSlideTransition() {
+            const transition = document.getElementById('slideTransition').value;
+            slides[currentSlideIndex].transition = transition;
+            saveState();
+        }
+
+        function updateSlideDuration() {
+            const duration = parseFloat(document.getElementById('slideDuration').value);
+            slides[currentSlideIndex].duration = duration;
+            document.getElementById('durationValue').textContent = duration.toFixed(1) + 's';
+            saveState();
+        }
+
+        function updateSlideProperties() {
+            const slide = slides[currentSlideIndex];
+            document.getElementById('slideBackground').value = slide.background;
+            document.getElementById('slideTransition').value = slide.transition;
+            document.getElementById('slideDuration').value = slide.duration;
+            document.getElementById('durationValue').textContent = slide.duration.toFixed(1) + 's';
+        }
+
+        // Modal Management
+        function showTransitionModal() {
+            document.getElementById('transitionModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('transitionModal').classList.remove('active');
+        }
+
+        function applyTransition() {
+            const selectedTransition = document.querySelector('input[name="transition"]:checked').value;
+            slides.forEach(slide => {
+                slide.transition = selectedTransition;
+            });
+            document.getElementById('slideTransition').value = selectedTransition;
+            closeModal();
+            showNotification('Transition applied to all slides', 'success');
+        }
+
+        function showTutorial() {
+            document.getElementById('tutorialOverlay').style.display = 'flex';
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorialOverlay').style.display = 'none';
+        }
+
+        // Presentation Mode
+        function previewSlides() {
+            const presentationMode = document.getElementById('presentationMode');
+            const presentationSlides = document.getElementById('presentationSlides');
+            
+            presentationSlides.innerHTML = '';
+            presentationSlideIndex = 0;
+
+            slides.forEach((slide, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'presentation-slide';
+                slideDiv.id = `presentation-slide-${index}`;
+                slideDiv.style.background = slide.background;
+                slideDiv.style.padding = '40px';
+                slideDiv.style.position = 'relative';
+
+                slide.elements.forEach(element => {
+                    const elementDiv = document.createElement('div');
+                    elementDiv.style.position = 'absolute';
+                    elementDiv.style.left = element.x + 'px';
+                    elementDiv.style.top = element.y + 'px';
+                    elementDiv.style.opacity = element.opacity || 1;
+                    elementDiv.style.borderRadius = (element.borderRadius || 0) + 'px';
+                    
+                    // Apply shadow effects
+                    const shadows = {
+                        'none': 'none',
+                        'small': '0 2px 4px rgba(0,0,0,0.1)',
+                        'medium': '0 4px 8px rgba(0,0,0,0.15)',
+                        'large': '0 8px 16px rgba(0,0,0,0.2)',
+                        'glow': '0 0 20px rgba(102, 126, 234, 0.4)'
+                    };
+                    elementDiv.style.boxShadow = shadows[element.shadow] || 'none';
+
+                    if (element.type === 'text' || element.type === 'heading') {
+                        elementDiv.innerHTML = element.content.replace(/\n/g, '<br>');
+                        elementDiv.style.fontSize = element.fontSize + 'px';
+                        elementDiv.style.color = element.color;
+                        elementDiv.style.backgroundColor = element.backgroundColor;
+                        elementDiv.style.fontWeight = element.fontWeight;
+                        elementDiv.style.textAlign = element.textAlign;
+                        elementDiv.style.width = (element.width || 300) + 'px';
+                        elementDiv.style.lineHeight = '1.5';
+                        
+                    } else if (element.type === 'bullets') {
+                        const ul = document.createElement('ul');
+                        ul.className = 'bullet-list';
+                        ul.style.fontSize = element.fontSize + 'px';
+                        ul.style.color = element.color;
+                        ul.style.backgroundColor = element.backgroundColor;
+                        ul.style.fontWeight = element.fontWeight;
+                        ul.style.padding = '12px';
+                        
+                        element.content.forEach(bullet => {
+                            const li = document.createElement('li');
+                            li.textContent = bullet;
+                            ul.appendChild(li);
+                        });
+                        
+                        elementDiv.appendChild(ul);
+                        
+                    } else if (element.type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = element.content;
+                        img.style.width = (element.width || 200) + 'px';
+                        img.style.height = (element.height || 150) + 'px';
+                        img.style.objectFit = 'contain';
+                        img.style.borderRadius = (element.borderRadius || 0) + 'px';
+                        elementDiv.appendChild(img);
+                    } else if (element.type === 'shape') {
+                        const shape = document.createElement('div');
+                        shape.className = 'shape-element';
+                        shape.style.width = (element.width || 150) + 'px';
+                        shape.style.height = (element.height || 100) + 'px';
+                        shape.style.backgroundColor = element.backgroundColor || element.color;
+                        shape.style.borderRadius = (element.borderRadius || 0) + 'px';
+                        shape.textContent = element.shape.charAt(0).toUpperCase() + element.shape.slice(1);
+                        elementDiv.appendChild(shape);
+                    }
+
+                    slideDiv.appendChild(elementDiv);
+                });
+
+                presentationSlides.appendChild(slideDiv);
+            });
+
+            showPresentationSlide(0);
+            presentationMode.classList.add('active');
+        }
+
+        function showPresentationSlide(index) {
+            const slides = document.querySelectorAll('.presentation-slide');
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (slides[index]) {
+                slides[index].classList.add('active');
+                const transition = slides[presentationSlideIndex]?.transition || 'fade';
+                slides[index].classList.add(`slide-transition-${transition}`);
+                
+                setTimeout(() => {
+                    slides[index].classList.remove(`slide-transition-${transition}`);
+                }, 500);
+            }
+        }
+
+        function nextSlide() {
+            if (presentationSlideIndex < slides.length - 1) {
+                presentationSlideIndex++;
+                showPresentationSlide(presentationSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (presentationSlideIndex > 0) {
+                presentationSlideIndex--;
+                showPresentationSlide(presentationSlideIndex);
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').classList.remove('active');
+        }
+
+        // Export Functions
+        function exportAsHTML() {
+            const htmlContent = generateHTMLExport();
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'presentation.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Presentation exported as HTML', 'success');
+        }
+
+        function generateHTMLExport() {
+            let slidesHTML = '';
+            
+            slides.forEach((slide, index) => {
+                let elementsHTML = '';
+                
+                slide.elements.forEach(element => {
+                    let elementHTML = '';
+                    const style = `position: absolute; left: ${element.x}px; top: ${element.y}px; opacity: ${element.opacity || 1}; border-radius: ${element.borderRadius || 0}px;`;
+                    
+                    if (element.type === 'text' || element.type === 'heading') {
+                        const textStyle = `font-size: ${element.fontSize}px; color: ${element.color}; background: ${element.backgroundColor}; font-weight: ${element.fontWeight}; text-align: ${element.textAlign}; width: ${element.width || 300}px; line-height: 1.5;`;
+                        elementHTML = `<div style="${style}${textStyle}">${element.content.replace(/\n/g, '<br>')}</div>`;
+                        
+                    } else if (element.type === 'bullets') {
+                        const listStyle = `font-size: ${element.fontSize}px; color: ${element.color}; background: ${element.backgroundColor}; font-weight: ${element.fontWeight}; padding: 12px;`;
+                        const bullets = element.content.map(bullet => `<li>${bullet}</li>`).join('');
+                        elementHTML = `<ul style="${style}${listStyle}">${bullets}</ul>`;
+                        
+                    } else if (element.type === 'image') {
+                        elementHTML = `<img src="${element.content}" style="${style}width: ${element.width || 200}px; height: ${element.height || 150}px; object-fit: contain; border-radius: ${element.borderRadius || 0}px;">`;
+                    } else if (element.type === 'shape') {
+                        elementHTML = `<div style="${style}width: ${element.width || 150}px; height: ${element.height || 100}px; background: ${element.backgroundColor || element.color}; border-radius: ${element.borderRadius || 0}px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${element.shape.charAt(0).toUpperCase() + element.shape.slice(1)}</div>`;
+                    }
+                    
+                    elementsHTML += elementHTML;
+                });
+                
+                slidesHTML += `
+                    <div class="slide" style="display: none; width: 100vw; height: 100vh; background: ${slide.background}; position: relative; padding: 40px;">
+                        ${elementsHTML}
+                    </div>
+                `;
+            });
+
+            return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Export</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: black; overflow: hidden; }
+        .slide { transition: all 0.5s ease-in-out; position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .slide-content { max-width: 80%; max-height: 80%; position: relative; }
+        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 12px 24px; border-radius: 30px; display: flex; gap: 16px; backdrop-filter: blur(10px); }
+        .controls button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.3s; }
+        .controls button:hover { background: rgba(255,255,255,0.2); }
+        .slide-counter { position: fixed; top: 30px; right: 30px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; }
+        
+        .slide-transition-slideRight { animation: slideInRight 0.8s ease; } 
+        .slide-transition-slideLeft { animation: slideInLeft 0.8s ease; } 
+        .slide-transition-fade { animation: fadeIn 0.6s ease; } 
+        .slide-transition-zoom { animation: zoomIn 0.7s ease; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%) rotateY(45deg); opacity: 0; }
+            to { transform: translateX(0) rotateY(0deg); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%) rotateY(-45deg); opacity: 0; }
+            to { transform: translateX(0) rotateY(0deg); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8) rotateZ(-5deg); opacity: 0; }
+            to { transform: scale(1) rotateZ(0deg); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-counter" id="slideCounter">1 / ${slides.length}</div>
+    ${slidesHTML}
+    <div class="controls">
+        <button onclick="previousSlide()">← Previous</button>
+        <button onclick="nextSlide()">Next →</button>
+        <button onclick="exitPresentation()">Exit</button>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = ${slides.length};
+        
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.style.display = 'none';
+                slide.classList.remove('active');
+            });
+            
+            const slide = document.querySelectorAll('.slide')[index];
+            if (slide) {
+                slide.style.display = 'flex';
+                slide.classList.add('active');
+                slide.classList.add('slide-transition-' + '${slides[index].transition}');
+                document.getElementById('slideCounter').textContent = (index + 1) + ' / ' + totalSlides;
+                
+                setTimeout(() => {
+                    slide.classList.remove('slide-transition-' + '${slides[index].transition}');
+                }, 800);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+        
+        function exitPresentation() {
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0a0b14;color:white;font-size:2rem;">Presentation Ended</div>';
+            setTimeout(() => { window.close(); }, 2000);
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+            if (e.key === 'Escape') exitPresentation();
+        });
+        
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
+            `;
+        }
+
+        // Auto-save with enhanced feedback
+        function setupAutoSave() {
+            setInterval(() => {
+                autoSave();
+            }, 10000); // Auto-save every 10 seconds
+        }
+
+        function autoSave() {
+            updateStatusIndicator('saving');
+            const presentationData = {
+                slides: slides,
+                currentSlideIndex: currentSlideIndex,
+                lastModified: new Date().toISOString()
+            };
+            
+            localStorage.setItem('slideDeckAutoSave', JSON.stringify(presentationData));
+            
+            setTimeout(() => {
+                updateStatusIndicator('saved');
+            }, 800);
+        }
+
+        function loadAutoSave() {
+            const savedData = localStorage.getItem('slideDeckAutoSave');
+            if (savedData) {
+                const presentationData = JSON.parse(savedData);
+                slides = presentationData.slides;
+                currentSlideIndex = presentationData.currentSlideIndex || 0;
+                renderSlideThumbnails();
+                renderCurrentSlide();
+                showNotification('Auto-saved presentation loaded', 'info');
+            }
+        }
+
+        // Enhanced keyboard shortcuts info
+        function showKeyboardShortcuts() {
+            const modal = document.getElementById('transitionModal');
+            const modalContent = modal.querySelector('.modal-content');
+            
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h2>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                        <div>
+                            <h4 style="color: var(--primary-solid); margin-bottom: 12px;">Navigation</h4>
+                            <p><kbd>Escape</kbd> - Exit presentation/close modals</p>
+                            <p><kbd>Delete</kbd> - Delete selected element</p>
+                            <p><kbd>Arrow Keys</kbd> - Navigate slides in presentation</p>
+                            <p><kbd>Space</kbd> - Next slide in presentation</p>
+                            
+                            <h4 style="color: var(--primary-solid); margin: 16px 0 12px;">Editing</h4>
+                            <p><kbd>Ctrl/Cmd + Z</kbd> - Undo</p>
+                            <p><kbd>Ctrl/Cmd + Shift + Z</kbd> - Redo</p>
+                            <p><kbd>Ctrl/Cmd + D</kbd> - Duplicate slide</p>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--primary-solid); margin-bottom: 12px;">File Operations</h4>
+                            <p><kbd>Ctrl/Cmd + S</kbd> - Export as HTML</p>
+                            <p><kbd>Ctrl/Cmd + N</kbd> - New slide</p>
+                            <p><kbd>Ctrl/Cmd + G</kbd> - Toggle grid</p>
+                            
+                            <h4 style="color: var(--primary-solid); margin: 16px 0 12px;">Tips</h4>
+                            <p>• Right-click for context menu</p>
+                            <p>• Drag & drop images directly</p>
+                            <p>• Grid snapping when enabled</p>
+                            <p>• Auto-save every 10 seconds</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="toolbar-btn" onclick="closeModal()" style="margin-top: 20px; width: 100%;">Got it!</button>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        // Initialize with style
+        window.addEventListener('load', () => {
+            loadAutoSave();
+            init();
+        });
+    </script>
+</body>
+</html>
