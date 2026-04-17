@@ -1,0 +1,2848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Deck Builder Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --transition-speed: 0.3s;
+            --border-radius: 8px;
+        }
+
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            transition: width var(--transition-speed) ease;
+            z-index: 100;
+        }
+
+        .sidebar.collapsed {
+            width: 50px;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar.collapsed .sidebar-header h1 {
+            opacity: 0;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            transition: opacity var(--transition-speed);
+        }
+
+        .sidebar.collapsed .sidebar-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .slide-thumbnails {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .slide-thumbnail {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .slide-thumbnail:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .slide-thumbnail.active {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+
+        .slide-preview {
+            width: 100%;
+            height: 60px;
+            background: var(--background);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-number {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .slide-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .slide-thumbnail:hover .slide-controls {
+            opacity: 1;
+        }
+
+        .control-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: transform 0.1s;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .duplicate-btn {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .add-slide-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-slide-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Main Editor */
+        .main-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 16px;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            margin-left: auto;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--background);
+            border-color: var(--primary-color);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .export-btn {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .export-btn:hover {
+            background: #047857;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            background: var(--background);
+            padding: 40px;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .slide-canvas {
+            width: 800px;
+            height: 600px;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .slide-canvas:hover {
+            transform: translateY(-5px);
+        }
+
+        .slide-content {
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-element {
+            position: absolute;
+            cursor: move;
+            border: 2px solid transparent;
+            min-height: 30px;
+            min-width: 100px;
+            transition: all 0.2s;
+        }
+
+        .slide-element:hover {
+            border-color: var(--primary-color);
+        }
+
+        .slide-element.selected {
+            border-color: var(--primary-color);
+            border-style: dashed;
+            z-index: 10;
+        }
+
+        .element-controls {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: var(--surface);
+            border-radius: 4px;
+            padding: 4px;
+            box-shadow: var(--shadow);
+            z-index: 20;
+        }
+
+        .slide-element:hover .element-controls,
+        .slide-element.selected .element-controls {
+            opacity: 1;
+        }
+
+        .text-element {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            outline: none;
+            resize: none;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .heading-element {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .bullet-list {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        .bullet-list li {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .image-element {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 280px;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            transition: width var(--transition-speed) ease;
+        }
+
+        .properties-panel.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .toggle-properties {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 10;
+        }
+
+        .property-group {
+            margin-bottom: 24px;
+        }
+
+        .property-group h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .property-item {
+            margin-bottom: 12px;
+        }
+
+        .property-item label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .property-item input,
+        .property-item select,
+        .property-item textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+
+        .property-item input:focus,
+        .property-item select:focus,
+        .property-item textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .color-input {
+            height: 40px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        /* Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+        }
+
+        .presentation-slide {
+            width: 90vw;
+            height: 90vh;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            display: none;
+            position: relative;
+        }
+
+        .presentation-slide.active {
+            display: block;
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .presentation-mode:hover .presentation-controls {
+            opacity: 1;
+        }
+
+        .presentation-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .slide-transition-slideRight { animation: slideInRight 0.5s ease-out; }
+        .slide-transition-slideLeft { animation: slideInLeft 0.5s ease-out; }
+        .slide-transition-fade { animation: fadeIn 0.5s ease-out; }
+        .slide-transition-zoom { animation: zoomIn 0.5s ease-out; }
+
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .ai-assistant:hover {
+            transform: scale(1.1);
+        }
+
+        .ai-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 350px;
+            height: 400px;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .ai-panel.active {
+            display: flex;
+        }
+
+        .ai-header {
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: var(--background);
+        }
+
+        .ai-input {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .ai-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+        }
+
+        .ai-input button {
+            padding: 10px 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background: var(--background);
+            margin-right: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar { width: 250px; }
+            .properties-panel { width: 250px; }
+            .slide-canvas { width: 600px; height: 450px; }
+        }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; }
+            .properties-panel { width: 100%; height: auto; }
+            .slide-canvas { width: 90%; height: 400px; }
+            .toolbar { flex-wrap: wrap; }
+            .toolbar-group { border-right: none; padding-right: 0; margin-bottom: 10px; }
+        }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            z-index: 20;
+        }
+
+        .resize-nw { top: -5px; left: -5px; cursor: nw-resize; }
+        .resize-ne { top: -5px; right: -5px; cursor: ne-resize; }
+        .resize-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+        .resize-se { bottom: -5px; right: -5px; cursor: se-resize; }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--surface);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+        
+        /* Presenter View */
+        .presenter-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            grid-template-columns: 70% 30%;
+            z-index: 3000;
+        }
+        
+        .presenter-view.active {
+            display: grid;
+        }
+        
+        .current-slide-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: black;
+            padding: 20px;
+        }
+        
+        .presenter-info {
+            background: #1e293b;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .next-slide-container {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            flex: 1;
+        }
+        
+        .presenter-notes {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .presenter-notes textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            resize: none;
+            outline: none;
+        }
+        
+        .slide-timer {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        /* Version History */
+        .version-history {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: var(--surface);
+            z-index: 2000;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-lg);
+            overflow-y: auto;
+        }
+        
+        .version-history.active {
+            transform: translateX(0);
+        }
+        
+        .version-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .version-item:hover {
+            background: var(--background);
+        }
+        
+        /* Animation Controls */
+        .animation-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .animation-btn {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--background);
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .animation-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>📊 Slide Deck Pro</h1>
+                <button class="toggle-sidebar" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <div class="slide-thumbnails" id="slideThumbnails">
+                    <!-- Slide thumbnails will be populated here -->
+                </div>
+                <button class="add-slide-btn" onclick="addSlide()">
+                    <i class="fas fa-plus"></i> Add New Slide
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Editor -->
+        <div class="main-editor">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="addTextElement()">
+                        <i class="fas fa-font"></i> Text
+                    </button>
+                    <button class="toolbar-btn" onclick="addHeadingElement()">
+                        <i class="fas fa-heading"></i> Heading
+                    </button>
+                    <button class="toolbar-btn" onclick="addBulletList()">
+                        <i class="fas fa-list-ul"></i> Bullets
+                    </button>
+                    <button class="toolbar-btn" onclick="addImageElement()">
+                        <i class="fas fa-image"></i> Image
+                    </button>
+                    <button class="toolbar-btn" onclick="addChart()">
+                        <i class="fas fa-chart-bar"></i> Chart
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="previewSlides()">
+                        <i class="fas fa-eye"></i> Preview
+                    </button>
+                    <button class="toolbar-btn" onclick="showTransitionModal()">
+                        <i class="fas fa-bolt"></i> Transitions
+                    </button>
+                    <button class="toolbar-btn" onclick="showTemplatesModal()">
+                        <i class="fas fa-layer-group"></i> Templates
+                    </button>
+                    <button class="toolbar-btn" onclick="togglePresenterMode()">
+                        <i class="fas fa-user"></i> Presenter
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn export-btn" onclick="exportAsHTML()">
+                        <i class="fas fa-file-code"></i> Export HTML
+                    </button>
+                    <button class="toolbar-btn export-btn" onclick="exportAsPDF()">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                    <button class="toolbar-btn" onclick="showVersionHistory()">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                    <button class="toolbar-btn" onclick="showKeyboardShortcuts()">
+                        <i class="fas fa-keyboard"></i> Shortcuts
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-area">
+                <div class="slide-canvas" id="slideCanvas">
+                    <div class="slide-content" id="slideContent">
+                        <!-- Slide content will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel" id="propertiesPanel">
+            <button class="toggle-properties" onclick="togglePropertiesPanel()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="property-group">
+                <h3>Slide Properties</h3>
+                <div class="property-item">
+                    <label>Background Color</label>
+                    <input type="color" class="color-input" id="slideBackground" value="#ffffff" onchange="updateSlideBackground()">
+                </div>
+                <div class="property-item">
+                    <label>Transition</label>
+                    <select id="slideTransition" onchange="updateSlideTransition()">
+                        <option value="fade">Fade</option>
+                        <option value="slideRight">Slide Right</option>
+                        <option value="slideLeft">Slide Left</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                <div class="property-item">
+                    <label>Notes</label>
+                    <textarea id="slideNotes" rows="4" onchange="updateSlideNotes()"></textarea>
+                </div>
+            </div>
+
+            <div class="property-group" id="elementProperties" style="display: none;">
+                <h3>Element Properties</h3>
+                <div class="property-item">
+                    <label>Font Size</label>
+                    <div class="slider-container">
+                        <input type="range" id="elementFontSizeSlider" min="8" max="72" value="16" oninput="updateElementStyleFromSlider()">
+                        <span class="slider-value" id="fontSizeValue">16px</span>
+                    </div>
+                </div>
+                <div class="property-item">
+                    <label>Font Color</label>
+                    <input type="color" class="color-input" id="elementColor" value="#1e293b" onchange="updateElementStyle()">
+                </div>
+                <div class="property-item">
+                    <label>Font Weight</label>
+                    <select id="elementFontWeight" onchange="updateElementStyle()">
+                        <option value="normal">Normal</option>
+                        <option value="bold">Bold</option>
+                        <option value="lighter">Light</option>
+                    </select>
+                </div>
+                <div class="property-item">
+                    <label>Text Align</label>
+                    <select id="elementTextAlign" onchange="updateElementStyle()">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                        <option value="justify">Justify</option>
+                    </select>
+                </div>
+                <div class="property-item" id="imageProperties" style="display: none;">
+                    <label>Image Opacity</label>
+                    <div class="slider-container">
+                        <input type="range" id="imageOpacity" min="0" max="100" value="100" oninput="updateImageOpacity()">
+                        <span class="slider-value" id="opacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="property-item">
+                    <label>Element Animation</label>
+                    <div class="animation-controls">
+                        <div class="animation-btn" data-animation="none" onclick="setElementAnimation('none')">None</div>
+                        <div class="animation-btn" data-animation="fade" onclick="setElementAnimation('fade')">Fade</div>
+                        <div class="animation-btn" data-animation="slide" onclick="setElementAnimation('slide')">Slide</div>
+                        <div class="animation-btn" data-animation="zoom" onclick="setElementAnimation('zoom')">Zoom</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transition Modal -->
+    <div class="modal" id="transitionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Slide Transitions</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <p>Select a transition effect for your slides:</p>
+            <div style="margin: 20px 0;">
+                <label><input type="radio" name="transition" value="fade" checked> Fade</label><br>
+                <label><input type="radio" name="transition" value="slideRight"> Slide Right</label><br>
+                <label><input type="radio" name="transition" value="slideLeft"> Slide Left</label><br>
+                <label><input type="radio" name="transition" value="zoom"> Zoom</label>
+            </div>
+            <button class="toolbar-btn" onclick="applyTransition()">Apply Transition</button>
+        </div>
+    </div>
+
+    <!-- Templates Modal -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Slide Templates</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <p>Select a template to apply:</p>
+            <div class="templates-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                <div class="template-card" onclick="applyTemplate('title')">
+                    <div class="template-preview" style="height: 120px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; color: white;">
+                        <h3 style="font-size: 24px; margin-bottom: 10px;">Title Slide</h3>
+                        <p>Presentation Title</p>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Title Slide</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('content')">
+                    <div class="template-preview" style="height: 120px; background: var(--surface); border-radius: 8px; padding: 15px; border: 1px solid var(--border);">
+                        <h3 style="font-size: 18px; margin-bottom: 10px;">Content Slide</h3>
+                        <ul style="padding-left: 20px; font-size: 14px;">
+                            <li>Bullet point 1</li>
+                            <li>Bullet point 2</li>
+                            <li>Bullet point 3</li>
+                        </ul>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Content Slide</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('section')">
+                    <div class="template-preview" style="height: 120px; background: var(--background); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px;">
+                        <h3 style="font-size: 22px; margin-bottom: 10px;">Section Header</h3>
+                        <p style="color: var(--text-secondary);">Section description</p>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Section Header</p>
+                </div>
+                <div class="template-card" onclick="applyTemplate('image')">
+                    <div class="template-preview" style="height: 120px; background: var(--surface); border-radius: 8px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border);">
+                        <div style="width: 80px; height: 80px; background: var(--border); display: flex; justify-content: center; align-items: center; border-radius: 4px;">
+                            <i class="fas fa-image" style="font-size: 24px; color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Image Focus</p>
+                </div>
+            </div>
+            <button class="toolbar-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="slide-counter" id="slideCounter">1 / 1</div>
+        <div class="presentation-controls">
+            <button class="presentation-btn" onclick="previousSlide()">← Previous</button>
+            <button class="presentation-btn" onclick="nextSlide()">Next →</button>
+            <button class="presentation-btn" onclick="togglePresenterMode()">Presenter</button>
+            <button class="presentation-btn" onclick="exitPresentation()">Exit</button>
+        </div>
+        <div id="presentationSlides">
+            <!-- Presentation slides will be populated here -->
+        </div>
+    </div>
+    
+    <!-- Presenter View -->
+    <div class="presenter-view" id="presenterView">
+        <div class="current-slide-container" id="currentSlideContainer">
+            <!-- Current slide will be shown here -->
+        </div>
+        <div class="presenter-info">
+            <div class="slide-timer" id="slideTimer">00:00</div>
+            <div class="next-slide-container">
+                <h3>Next Slide</h3>
+                <div id="nextSlidePreview"></div>
+            </div>
+            <div class="presenter-notes">
+                <h3>Notes</h3>
+                <textarea id="presenterNotes" readonly></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Version History -->
+    <div class="version-history" id="versionHistory">
+        <div class="modal-header">
+            <h2>Version History</h2>
+            <button class="close-btn" onclick="toggleVersionHistory()">&times;</button>
+        </div>
+        <div id="versionList">
+            <!-- Version history items will be populated here -->
+        </div>
+    </div>
+
+    <!-- AI Assistant -->
+    <div class="ai-assistant" onclick="toggleAIPanel()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="ai-panel" id="aiPanel">
+        <div class="ai-header">
+            <h3>AI Presentation Assistant</h3>
+            <button class="close-btn" onclick="toggleAIPanel()">&times;</button>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+            <div class="message ai-message">
+                Hello! I'm your AI presentation assistant. How can I help you with your slides today?
+            </div>
+        </div>
+        <div class="ai-input">
+            <input type="text" id="aiInput" placeholder="Ask me anything about your presentation...">
+            <button onclick="sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let slides = [
+            {
+                id: 1,
+                elements: [],
+                background: '#ffffff',
+                transition: 'fade',
+                notes: ''
+            }
+        ];
+        let currentSlideIndex = 0;
+        let selectedElement = null;
+        let draggedElement = null;
+        let elementCounter = 0;
+        let presentationSlideIndex = 0;
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_UNDO_STEPS = 50;
+        let presentationTimer = null;
+        let startTime = null;
+        let versionHistory = [];
+        let theme = 'light';
+        let presenterMode = false;
+
+        // Templates
+        const TEMPLATES = {
+            title: {
+                background: '#ffffff',
+                elements: [
+                    {
+                        id: 1,
+                        type: 'heading',
+                        content: 'Presentation Title',
+                        x: 200,
+                        y: 200,
+                        fontSize: 48,
+                        color: '#1e293b',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        animation: 'none'
+                    },
+                    {
+                        id: 2,
+                        type: 'text',
+                        content: 'Subtitle or presenter name',
+                        x: 200,
+                        y: 280,
+                        fontSize: 24,
+                        color: '#64748b',
+                        fontWeight: 'normal',
+                        textAlign: 'center',
+                        animation: 'none'
+                    }
+                ]
+            },
+            section: {
+                background: '#f1f5f9',
+                elements: [
+                    {
+                        id: 1,
+                        type: 'heading',
+                        content: 'Section Title',
+                        x: 100,
+                        y: 200,
+                        fontSize: 36,
+                        color: '#1e293b',
+                        fontWeight: 'bold',
+                        textAlign: 'left',
+                        animation: 'none'
+                    },
+                    {
+                        id: 2,
+                        type: 'text',
+                        content: 'This is the beginning of a new section.',
+                        x: 100,
+                        y: 260,
+                        fontSize: 18,
+                        color: '#64748b',
+                        fontWeight: 'normal',
+                        textAlign: 'left',
+                        animation: 'none'
+                    }
+                ]
+            },
+            content: {
+                background: '#ffffff',
+                elements: [
+                    {
+                        id: 1,
+                        type: 'heading',
+                        content: 'Slide Title',
+                        x: 100,
+                        y: 100,
+                        fontSize: 32,
+                        color: '#1e293b',
+                        fontWeight: 'bold',
+                        textAlign: 'left',
+                        animation: 'none'
+                    },
+                    {
+                        id: 2,
+                        type: 'bullets',
+                        content: ['First point', 'Second point', 'Third point'],
+                        x: 120,
+                        y: 180,
+                        fontSize: 18,
+                        color: '#1e293b',
+                        fontWeight: 'normal',
+                        textAlign: 'left',
+                        animation: 'none'
+                    }
+                ]
+            },
+            image: {
+                background: '#ffffff',
+                elements: [
+                    {
+                        id: 1,
+                        type: 'heading',
+                        content: 'Image Focus',
+                        x: 100,
+                        y: 50,
+                        fontSize: 32,
+                        color: '#1e293b',
+                        fontWeight: 'bold',
+                        textAlign: 'left',
+                        animation: 'none'
+                    },
+                    {
+                        id: 2,
+                        type: 'text',
+                        content: 'This slide highlights an important image',
+                        x: 100,
+                        y: 100,
+                        fontSize: 18,
+                        color: '#64748b',
+                        fontWeight: 'normal',
+                        textAlign: 'left',
+                        animation: 'none'
+                    },
+                    {
+                        id: 3,
+                        type: 'image',
+                        content: 'https://via.placeholder.com/400x300?text=Your+Image',
+                        x: 200,
+                        y: 150,
+                        width: 400,
+                        height: 300,
+                        animation: 'none'
+                    }
+                ]
+            }
+        };
+
+        // Initialize Application
+        function init() {
+            loadFromLocalStorage();
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            setupEventListeners();
+            setupThemeToggle();
+            startAutoSave();
+            createInitialVersion();
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            document.addEventListener('keydown', handleKeyboard);
+            
+            const slideContent = document.getElementById('slideContent');
+            slideContent.addEventListener('click', function(e) {
+                if (e.target === slideContent) {
+                    deselectElement();
+                }
+            });
+        }
+        
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        function startAutoSave() {
+            setInterval(() => {
+                saveToLocalStorage();
+                if (new Date() - versionHistory[versionHistory.length - 1]?.timestamp > 60000) {
+                    saveVersion();
+                }
+            }, 10000);
+        }
+
+        function handleKeyboard(e) {
+            if (e.key === 'Delete' && selectedElement) {
+                deleteElement(selectedElement.dataset.elementId);
+            }
+            if (e.key === 'Escape') {
+                exitPresentation();
+                closeModal();
+            }
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                exportAsHTML();
+            }
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+            if (e.key === 'ArrowRight' && document.getElementById('presentationMode').classList.contains('active')) {
+                nextSlide();
+            }
+            if (e.key === 'ArrowLeft' && document.getElementById('presentationMode').classList.contains('active')) {
+                previousSlide();
+            }
+            if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                togglePresenterMode();
+            }
+        }
+        
+        function toggleTheme() {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            saveToLocalStorage();
+        }
+
+        // UI Controls
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            
+            const icon = sidebar.querySelector('.toggle-sidebar i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.className = 'fas fa-chevron-right';
+            } else {
+                icon.className = 'fas fa-chevron-left';
+            }
+        }
+
+        function togglePropertiesPanel() {
+            const panel = document.getElementById('propertiesPanel');
+            panel.classList.toggle('collapsed');
+            
+            const icon = panel.querySelector('.toggle-properties i');
+            if (panel.classList.contains('collapsed')) {
+                icon.className = 'fas fa-chevron-left';
+            } else {
+                icon.className = 'fas fa-chevron-right';
+            }
+        }
+
+        function toggleAIPanel() {
+            document.getElementById('aiPanel').classList.toggle('active');
+        }
+        
+        function togglePresenterMode() {
+            const presenterView = document.getElementById('presenterView');
+            if (presenterView.classList.contains('active')) {
+                presenterView.classList.remove('active');
+                presenterMode = false;
+                stopTimer();
+            } else {
+                presenterView.classList.add('active');
+                presenterMode = true;
+                startTimer();
+                updatePresenterView();
+            }
+        }
+        
+        function toggleVersionHistory() {
+            document.getElementById('versionHistory').classList.toggle('active');
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            const messagesContainer = document.getElementById('aiMessages');
+            
+            // Add user message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = message;
+            messagesContainer.appendChild(userMessage);
+            
+            // Clear input
+            input.value = '';
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const aiMessage = document.createElement('div');
+                aiMessage.className = 'message ai-message';
+                
+                // Enhanced AI responses with content generation
+                if (message.toLowerCase().includes('background')) {
+                    aiMessage.textContent = "To change the background color, use the properties panel on the right. You can select any color you like for your slide.";
+                } else if (message.toLowerCase().includes('add slide')) {
+                    aiMessage.textContent = "Click the 'Add New Slide' button in the sidebar to create a new slide. You can also use templates to quickly create professional slides.";
+                } else if (message.toLowerCase().includes('export')) {
+                    aiMessage.textContent = "You can export your presentation as HTML or PDF using the buttons in the toolbar. The HTML export creates a standalone presentation file, while PDF creates a printable version.";
+                } else if (message.toLowerCase().includes('template')) {
+                    aiMessage.textContent = "We offer several templates: Title Slide, Content Slide, Section Header, and Image Focus. You can apply them from the Templates button in the toolbar.";
+                } else if (message.toLowerCase().includes('generate') || message.toLowerCase().includes('suggest')) {
+                    // AI-generated content suggestion
+                    const generatedContent = generateAIContent(message);
+                    aiMessage.innerHTML = generatedContent;
+                    
+                    // Add button to insert content
+                    const insertButton = document.createElement('button');
+                    insertButton.className = 'toolbar-btn';
+                    insertButton.style.marginTop = '10px';
+                    insertButton.textContent = 'Insert Content';
+                    insertButton.onclick = function() {
+                        insertAIContent(generatedContent);
+                    };
+                    aiMessage.appendChild(insertButton);
+                } else {
+                    aiMessage.textContent = "I can help you with: \n- Adding and formatting slides\n- Using templates\n- Exporting your presentation\n- Adding images and text\n- Changing transitions\n- Generating content\nWhat would you like to know?";
+                }
+                
+                messagesContainer.appendChild(aiMessage);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 1000);
+        }
+        
+        function generateAIContent(prompt) {
+            // Simulated AI content generation
+            const contentTypes = [
+                "Based on your request, here's a professional slide content suggestion:\n\n**Key Strategies for Success**\n\n1. Define clear objectives\n2. Measure progress regularly\n3. Adapt to changing conditions\n4. Celebrate milestones",
+                "AI-generated content:\n\n**Innovation Framework**\n- Customer-centric approach\n- Agile development process\n- Data-driven decision making\n- Continuous improvement culture",
+                "Content suggestion:\n\n**Quarterly Performance**\n• Revenue: +15% growth\n• Customer satisfaction: 92%\n• New features launched: 5\n• Team efficiency: +20%"
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * contentTypes.length);
+            return contentTypes[randomIndex];
+        }
+        
+        function insertAIContent(content) {
+            if (!selectedElement) {
+                addTextElement();
+                // Wait for element to be created
+                setTimeout(() => {
+                    const elements = document.querySelectorAll('.slide-element');
+                    const lastElement = elements[elements.length - 1];
+                    if (lastElement) {
+                        const textArea = lastElement.querySelector('textarea');
+                        if (textArea) {
+                            textArea.value = content;
+                            textArea.dispatchEvent(new Event('input'));
+                        }
+                    }
+                }, 100);
+            } else {
+                const textArea = selectedElement.querySelector('textarea');
+                if (textArea) {
+                    textArea.value = content;
+                    textArea.dispatchEvent(new Event('input'));
+                }
+            }
+        }
+
+        function showTemplatesModal() {
+            document.getElementById('templatesModal').classList.add('active');
+        }
+        
+        function showVersionHistory() {
+            toggleVersionHistory();
+            renderVersionHistory();
+        }
+
+        // State Management
+        function saveToLocalStorage() {
+            const presentationData = {
+                slides: slides,
+                currentSlideIndex: currentSlideIndex,
+                elementCounter: elementCounter,
+                lastModified: new Date().toISOString(),
+                theme: theme
+            };
+            localStorage.setItem('slideDeckData', JSON.stringify(presentationData));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('slideDeckData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                slides = data.slides || slides;
+                currentSlideIndex = data.currentSlideIndex || 0;
+                elementCounter = data.elementCounter || 0;
+                theme = data.theme || theme;
+                
+                // Apply theme
+                document.documentElement.setAttribute('data-theme', theme);
+                const icon = document.querySelector('#themeToggle i');
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            
+            // Load version history
+            const savedVersions = localStorage.getItem('versionHistory');
+            if (savedVersions) {
+                versionHistory = JSON.parse(savedVersions);
+            }
+        }
+        
+        function createInitialVersion() {
+            if (versionHistory.length === 0) {
+                saveVersion();
+            }
+        }
+        
+        function saveVersion() {
+            const version = {
+                id: Date.now(),
+                data: JSON.parse(JSON.stringify(slides)),
+                timestamp: new Date(),
+                label: `Version ${versionHistory.length + 1}`
+            };
+            versionHistory.push(version);
+            localStorage.setItem('versionHistory', JSON.stringify(versionHistory));
+        }
+        
+        function restoreVersion(versionId) {
+            const version = versionHistory.find(v => v.id === versionId);
+            if (version) {
+                slides = JSON.parse(JSON.stringify(version.data));
+                currentSlideIndex = 0;
+                renderSlideThumbnails();
+                renderCurrentSlide();
+                saveToLocalStorage();
+            }
+        }
+        
+        function renderVersionHistory() {
+            const container = document.getElementById('versionList');
+            container.innerHTML = '';
+            
+            versionHistory.slice().reverse().forEach(version => {
+                const item = document.createElement('div');
+                item.className = 'version-item';
+                item.innerHTML = `
+                    <div><strong>${version.label}</strong></div>
+                    <div>${new Date(version.timestamp).toLocaleString()}</div>
+                    <div>${version.data.length} slides</div>
+                `;
+                item.onclick = () => restoreVersion(version.id);
+                container.appendChild(item);
+            });
+        }
+
+        function saveState() {
+            // Save current state to undo stack
+            undoStack.push(JSON.stringify({
+                slides: JSON.parse(JSON.stringify(slides)),
+                currentSlideIndex: currentSlideIndex,
+                elementCounter: elementCounter
+            }));
+            
+            // Limit undo stack size
+            if (undoStack.length > MAX_UNDO_STEPS) {
+                undoStack.shift();
+            }
+            
+            // Clear redo stack when new action is performed
+            redoStack = [];
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                // Save current state to redo stack
+                redoStack.push(JSON.stringify({
+                    slides: JSON.parse(JSON.stringify(slides)),
+                    currentSlideIndex: currentSlideIndex,
+                    elementCounter: elementCounter
+                }));
+                
+                // Restore previous state
+                const state = JSON.parse(undoStack.pop());
+                slides = state.slides;
+                currentSlideIndex = state.currentSlideIndex;
+                elementCounter = state.elementCounter;
+                
+                renderSlideThumbnails();
+                renderCurrentSlide();
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                // Save current state to undo stack
+                undoStack.push(JSON.stringify({
+                    slides: JSON.parse(JSON.stringify(slides)),
+                    currentSlideIndex: currentSlideIndex,
+                    elementCounter: elementCounter
+                }));
+                
+                // Restore next state
+                const state = JSON.parse(redoStack.pop());
+                slides = state.slides;
+                currentSlideIndex = state.currentSlideIndex;
+                elementCounter = state.elementCounter;
+                
+                renderSlideThumbnails();
+                renderCurrentSlide();
+            }
+        }
+
+        // Slide Management
+        function addSlide() {
+            saveState();
+            
+            const newSlide = {
+                id: Date.now(),
+                elements: [],
+                background: '#ffffff',
+                transition: 'fade',
+                notes: ''
+            };
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+        }
+
+        function duplicateSlide(slideIndex) {
+            saveState();
+            
+            const slideToDuplicate = slides[slideIndex];
+            const duplicatedSlide = {
+                id: Date.now(),
+                elements: JSON.parse(JSON.stringify(slideToDuplicate.elements)),
+                background: slideToDuplicate.background,
+                transition: slideToDuplicate.transition,
+                notes: slideToDuplicate.notes
+            };
+            
+            // Update element IDs to avoid conflicts
+            duplicatedSlide.elements.forEach(element => {
+                element.id = ++elementCounter;
+            });
+            
+            slides.splice(slideIndex + 1, 0, duplicatedSlide);
+            currentSlideIndex = slideIndex + 1;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+        }
+
+        function deleteSlide(slideIndex) {
+            saveState();
+            
+            if (slides.length > 1) {
+                slides.splice(slideIndex, 1);
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = slides.length - 1;
+                }
+                renderSlideThumbnails();
+                renderCurrentSlide();
+            }
+        }
+
+        function selectSlide(slideIndex) {
+            currentSlideIndex = slideIndex;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            deselectElement();
+        }
+        
+        function updateSlideNotes() {
+            slides[currentSlideIndex].notes = document.getElementById('slideNotes').value;
+        }
+
+        function renderSlideThumbnails() {
+            const container = document.getElementById('slideThumbnails');
+            container.innerHTML = '';
+
+            slides.forEach((slide, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${index === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.onclick = () => selectSlide(index);
+
+                thumbnail.innerHTML = `
+                    <div class="slide-preview" style="background: ${slide.background}">
+                        ${slide.elements.length} elements
+                        ${slide.notes ? '<div class="notes-indicator"><i class="fas fa-sticky-note"></i></div>' : ''}
+                    </div>
+                    <div class="slide-number">Slide ${index + 1}</div>
+                    <div class="slide-controls">
+                        <button class="control-btn duplicate-btn" onclick="event.stopPropagation(); duplicateSlide(${index})">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        ${slides.length > 1 ? `<button class="control-btn delete-btn" onclick="event.stopPropagation(); deleteSlide(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(thumbnail);
+            });
+        }
+
+        // Element Management
+        function addTextElement() {
+            saveState();
+            
+            const element = {
+                id: ++elementCounter,
+                type: 'text',
+                content: 'Click to edit text',
+                x: 100,
+                y: 100,
+                fontSize: 16,
+                color: '#1e293b',
+                fontWeight: 'normal',
+                textAlign: 'left',
+                animation: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+        }
+
+        function addHeadingElement() {
+            saveState();
+            
+            const element = {
+                id: ++elementCounter,
+                type: 'heading',
+                content: 'Your Heading Here',
+                x: 100,
+                y: 50,
+                fontSize: 32,
+                color: '#1e293b',
+                fontWeight: 'bold',
+                textAlign: 'left',
+                animation: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+        }
+
+        function addBulletList() {
+            saveState();
+            
+            const element = {
+                id: ++elementCounter,
+                type: 'bullets',
+                content: ['First bullet point', 'Second bullet point', 'Third bullet point'],
+                x: 100,
+                y: 200,
+                fontSize: 16,
+                color: '#1e293b',
+                fontWeight: 'normal',
+                textAlign: 'left',
+                animation: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+        }
+
+        function addImageElement() {
+            saveState();
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const element = {
+                            id: ++elementCounter,
+                            type: 'image',
+                            content: event.target.result,
+                            x: 100,
+                            y: 150,
+                            width: 200,
+                            height: 150,
+                            opacity: 100,
+                            animation: 'none'
+                        };
+                        
+                        slides[currentSlideIndex].elements.push(element);
+                        renderCurrentSlide();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function addChart() {
+            saveState();
+            
+            const element = {
+                id: ++elementCounter,
+                type: 'chart',
+                chartType: 'bar',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: [120, 150, 180, 90],
+                        backgroundColor: '#2563eb'
+                    }]
+                },
+                x: 100,
+                y: 150,
+                width: 400,
+                height: 300,
+                animation: 'none'
+            };
+            
+            slides[currentSlideIndex].elements.push(element);
+            renderCurrentSlide();
+        }
+
+        function deleteElement(elementId) {
+            saveState();
+            
+            const slide = slides[currentSlideIndex];
+            slide.elements = slide.elements.filter(el => el.id != elementId);
+            renderCurrentSlide();
+            deselectElement();
+        }
+
+        function selectElement(element) {
+            deselectElement();
+            selectedElement = element;
+            element.classList.add('selected');
+            showElementProperties();
+        }
+
+        function deselectElement() {
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+                selectedElement = null;
+                hideElementProperties();
+            }
+        }
+
+        function createResizeHandles(elementDiv) {
+            const handles = [
+                { position: 'nw', cursor: 'nw-resize' },
+                { position: 'ne', cursor: 'ne-resize' },
+                { position: 'sw', cursor: 'sw-resize' },
+                { position: 'se', cursor: 'se-resize' }
+            ];
+            
+            handles.forEach(handle => {
+                const handleDiv = document.createElement('div');
+                handleDiv.className = `resize-handle resize-${handle.position}`;
+                handleDiv.style.cursor = handle.cursor;
+                elementDiv.appendChild(handleDiv);
+                
+                handleDiv.addEventListener('mousedown', function(e) {
+                    e.stopPropagation();
+                    startResizing(elementDiv, handle.position);
+                });
+            });
+        }
+
+        function startResizing(elementDiv, handlePosition) {
+            const elementId = elementDiv.dataset.elementId;
+            const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+            if (!element) return;
+            
+            const startX = event.clientX;
+            const startY = event.clientY;
+            const startWidth = element.width || 200;
+            const startHeight = element.height || 150;
+            const startLeft = element.x;
+            const startTop = element.y;
+            
+            function onMouseMove(e) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                switch (handlePosition) {
+                    case 'se':
+                        element.width = Math.max(50, startWidth + dx);
+                        element.height = Math.max(50, startHeight + dy);
+                        break;
+                    case 'sw':
+                        element.width = Math.max(50, startWidth - dx);
+                        element.height = Math.max(50, startHeight + dy);
+                        element.x = startLeft + dx;
+                        break;
+                    case 'ne':
+                        element.width = Math.max(50, startWidth + dx);
+                        element.height = Math.max(50, startHeight - dy);
+                        element.y = startTop + dy;
+                        break;
+                    case 'nw':
+                        element.width = Math.max(50, startWidth - dx);
+                        element.height = Math.max(50, startHeight - dy);
+                        element.x = startLeft + dx;
+                        element.y = startTop + dy;
+                        break;
+                }
+                
+                renderCurrentSlide();
+                
+                // Re-select the element after re-render
+                setTimeout(() => {
+                    const newElement = document.querySelector(`[data-element-id="${elementId}"]`);
+                    if (newElement) selectElement(newElement);
+                }, 0);
+            }
+            
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        // Rendering
+        function renderCurrentSlide() {
+            const slideContent = document.getElementById('slideContent');
+            const slide = slides[currentSlideIndex];
+            
+            slideContent.innerHTML = '';
+            slideContent.style.background = slide.background;
+            
+            // Update slide notes
+            document.getElementById('slideNotes').value = slide.notes || '';
+
+            slide.elements.forEach(element => {
+                const elementDiv = createElementDiv(element);
+                slideContent.appendChild(elementDiv);
+            });
+
+            updateSlideProperties();
+        }
+
+        function createElementDiv(element) {
+            const div = document.createElement('div');
+            div.className = 'slide-element';
+            div.dataset.elementId = element.id;
+            div.style.left = element.x + 'px';
+            div.style.top = element.y + 'px';
+            div.style.width = (element.width || 'auto') + 'px';
+            div.style.height = (element.height || 'auto') + 'px';
+
+            div.innerHTML = `
+                <div class="element-controls">
+                    <button class="control-btn delete-btn" onclick="deleteElement(${element.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            if (element.type === 'text' || element.type === 'heading') {
+                const textArea = document.createElement('textarea');
+                textArea.className = element.type === 'heading' ? 'text-element heading-element' : 'text-element';
+                textArea.value = element.content;
+                textArea.style.fontSize = element.fontSize + 'px';
+                textArea.style.color = element.color;
+                textArea.style.fontWeight = element.fontWeight;
+                textArea.style.textAlign = element.textAlign;
+                textArea.style.width = '100%';
+                textArea.style.height = 'auto';
+                
+                textArea.oninput = function() {
+                    element.content = this.value;
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                };
+                
+                div.appendChild(textArea);
+                
+                // Auto-resize
+                setTimeout(() => {
+                    textArea.style.height = textArea.scrollHeight + 'px';
+                }, 0);
+                
+            } else if (element.type === 'bullets') {
+                const ul = document.createElement('ul');
+                ul.className = 'bullet-list';
+                ul.style.fontSize = element.fontSize + 'px';
+                ul.style.color = element.color;
+                ul.style.fontWeight = element.fontWeight;
+                
+                element.content.forEach((bullet, index) => {
+                    const li = document.createElement('li');
+                    li.contentEditable = true;
+                    li.textContent = bullet;
+                    li.oninput = function() {
+                        element.content[index] = this.textContent;
+                    };
+                    ul.appendChild(li);
+                });
+                
+                div.appendChild(ul);
+                
+            } else if (element.type === 'image') {
+                const img = document.createElement('img');
+                img.className = 'image-element';
+                img.src = element.content;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.opacity = (element.opacity || 100) / 100;
+                div.appendChild(img);
+                
+                // Add resize handles for images
+                createResizeHandles(div);
+                
+            } else if (element.type === 'chart') {
+                const canvas = document.createElement('canvas');
+                canvas.width = element.width || 400;
+                canvas.height = element.height || 300;
+                div.appendChild(canvas);
+                
+                // Render chart using Chart.js
+                setTimeout(() => {
+                    const ctx = canvas.getContext('2d');
+                    if (element.chartType === 'bar') {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: element.data,
+                            options: {
+                                responsive: false,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+                    } else if (element.chartType === 'pie') {
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: element.data,
+                            options: {
+                                responsive: false,
+                                maintainAspectRatio: false
+                            }
+                        });
+                    } else {
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: element.data,
+                            options: {
+                                responsive: false,
+                                maintainAspectRatio: false
+                            }
+                        });
+                    }
+                }, 100);
+            }
+
+            // Make draggable
+            div.onmousedown = function(e) {
+                if (e.target.classList.contains('control-btn')) return;
+                if (e.target.classList.contains('resize-handle')) return;
+                
+                selectElement(div);
+                
+                const rect = div.getBoundingClientRect();
+                const slideRect = document.getElementById('slideContent').getBoundingClientRect();
+                
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+
+                function onMouseMove(e) {
+                    const newX = e.clientX - slideRect.left - offsetX;
+                    const newY = e.clientY - slideRect.top - offsetY;
+                    
+                    div.style.left = Math.max(0, newX) + 'px';
+                    div.style.top = Math.max(0, newY) + 'px';
+                    
+                    element.x = Math.max(0, newX);
+                    element.y = Math.max(0, newY);
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+
+            return div;
+        }
+
+        // Properties Panel
+        function showElementProperties() {
+            const panel = document.getElementById('elementProperties');
+            panel.style.display = 'block';
+            
+            const imageProps = document.getElementById('imageProperties');
+            imageProps.style.display = 'none';
+            
+            // Reset animation buttons
+            document.querySelectorAll('.animation-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (selectedElement) {
+                const elementId = selectedElement.dataset.elementId;
+                const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+                
+                if (element) {
+                    if (element.type === 'text' || element.type === 'heading' || element.type === 'bullets') {
+                        document.getElementById('elementFontSizeSlider').value = element.fontSize;
+                        document.getElementById('fontSizeValue').textContent = element.fontSize + 'px';
+                        document.getElementById('elementColor').value = element.color;
+                        document.getElementById('elementFontWeight').value = element.fontWeight;
+                        document.getElementById('elementTextAlign').value = element.textAlign;
+                    }
+                    
+                    if (element.type === 'image') {
+                        imageProps.style.display = 'block';
+                        document.getElementById('imageOpacity').value = element.opacity || 100;
+                        document.getElementById('opacityValue').textContent = (element.opacity || 100) + '%';
+                    }
+                    
+                    // Set active animation button
+                    const animationBtn = document.querySelector(`.animation-btn[data-animation="${element.animation}"]`);
+                    if (animationBtn) {
+                        animationBtn.classList.add('active');
+                    }
+                }
+            }
+        }
+
+        function hideElementProperties() {
+            document.getElementById('elementProperties').style.display = 'none';
+        }
+
+        function updateElementStyle() {
+            if (!selectedElement) return;
+            
+            const elementId = selectedElement.dataset.elementId;
+            const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+            
+            if (element && (element.type === 'text' || element.type === 'heading' || element.type === 'bullets')) {
+                element.fontSize = parseInt(document.getElementById('elementFontSizeSlider').value);
+                element.color = document.getElementById('elementColor').value;
+                element.fontWeight = document.getElementById('elementFontWeight').value;
+                element.textAlign = document.getElementById('elementTextAlign').value;
+                
+                renderCurrentSlide();
+                
+                // Re-select the element after re-render
+                setTimeout(() => {
+                    const newElement = document.querySelector(`[data-element-id="${elementId}"]`);
+                    if (newElement) selectElement(newElement);
+                }, 0);
+            }
+        }
+
+        function updateElementStyleFromSlider() {
+            document.getElementById('fontSizeValue').textContent = document.getElementById('elementFontSizeSlider').value + 'px';
+            updateElementStyle();
+        }
+
+        function updateImageOpacity() {
+            if (!selectedElement) return;
+            
+            const elementId = selectedElement.dataset.elementId;
+            const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+            
+            if (element && element.type === 'image') {
+                element.opacity = parseInt(document.getElementById('imageOpacity').value);
+                document.getElementById('opacityValue').textContent = element.opacity + '%';
+                
+                renderCurrentSlide();
+                
+                // Re-select the element after re-render
+                setTimeout(() => {
+                    const newElement = document.querySelector(`[data-element-id="${elementId}"]`);
+                    if (newElement) selectElement(newElement);
+                }, 0);
+            }
+        }
+        
+        function setElementAnimation(animationType) {
+            if (!selectedElement) return;
+            
+            const elementId = selectedElement.dataset.elementId;
+            const element = slides[currentSlideIndex].elements.find(el => el.id == elementId);
+            
+            if (element) {
+                element.animation = animationType;
+                
+                // Update UI
+                document.querySelectorAll('.animation-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.animation-btn[data-animation="${animationType}"]`).classList.add('active');
+            }
+        }
+
+        function updateSlideBackground() {
+            const color = document.getElementById('slideBackground').value;
+            slides[currentSlideIndex].background = color;
+            document.getElementById('slideContent').style.background = color;
+            renderSlideThumbnails();
+        }
+
+        function updateSlideTransition() {
+            const transition = document.getElementById('slideTransition').value;
+            slides[currentSlideIndex].transition = transition;
+        }
+        
+        function updateSlideNotes() {
+            slides[currentSlideIndex].notes = document.getElementById('slideNotes').value;
+        }
+
+        function updateSlideProperties() {
+            const slide = slides[currentSlideIndex];
+            document.getElementById('slideBackground').value = slide.background;
+            document.getElementById('slideTransition').value = slide.transition;
+            document.getElementById('slideNotes').value = slide.notes || '';
+        }
+
+        function applyTemplate(templateKey) {
+            saveState();
+            
+            const template = TEMPLATES[templateKey];
+            if (!template) return;
+            
+            const newSlide = {
+                id: Date.now(),
+                elements: JSON.parse(JSON.stringify(template.elements)),
+                background: template.background,
+                transition: 'fade',
+                notes: ''
+            };
+            
+            // Update element IDs
+            newSlide.elements.forEach(element => {
+                element.id = ++elementCounter;
+            });
+            
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            renderSlideThumbnails();
+            renderCurrentSlide();
+            closeModal();
+        }
+
+        // Modal Management
+        function showTransitionModal() {
+            document.getElementById('transitionModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+
+        function applyTransition() {
+            const selectedTransition = document.querySelector('input[name="transition"]:checked').value;
+            slides.forEach(slide => {
+                slide.transition = selectedTransition;
+            });
+            document.getElementById('slideTransition').value = selectedTransition;
+            closeModal();
+        }
+
+        // Presentation Mode
+        function previewSlides() {
+            const presentationMode = document.getElementById('presentationMode');
+            const presentationSlides = document.getElementById('presentationSlides');
+            
+            presentationSlides.innerHTML = '';
+            presentationSlideIndex = 0;
+
+            slides.forEach((slide, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'presentation-slide';
+                slideDiv.id = `presentation-slide-${index}`;
+                slideDiv.style.background = slide.background;
+                slideDiv.style.padding = '40px';
+                slideDiv.style.position = 'relative';
+
+                slide.elements.forEach(element => {
+                    const elementDiv = document.createElement('div');
+                    elementDiv.style.position = 'absolute';
+                    elementDiv.style.left = element.x + 'px';
+                    elementDiv.style.top = element.y + 'px';
+                    elementDiv.style.width = (element.width || 'auto') + 'px';
+                    elementDiv.style.height = (element.height || 'auto') + 'px';
+                    elementDiv.style.animation = 'none';
+
+                    if (element.type === 'text' || element.type === 'heading') {
+                        elementDiv.innerHTML = element.content.replace(/\n/g, '<br>');
+                        elementDiv.style.fontSize = element.fontSize + 'px';
+                        elementDiv.style.color = element.color;
+                        elementDiv.style.fontWeight = element.fontWeight;
+                        elementDiv.style.textAlign = element.textAlign;
+                        elementDiv.style.lineHeight = '1.5';
+                        
+                    } else if (element.type === 'bullets') {
+                        const ul = document.createElement('ul');
+                        ul.style.fontSize = element.fontSize + 'px';
+                        ul.style.color = element.color;
+                        ul.style.fontWeight = element.fontWeight;
+                        ul.style.listStyleType = 'disc';
+                        ul.style.paddingLeft = '20px';
+                        
+                        element.content.forEach(bullet => {
+                            const li = document.createElement('li');
+                            li.textContent = bullet;
+                            li.style.marginBottom = '8px';
+                            ul.appendChild(li);
+                        });
+                        
+                        elementDiv.appendChild(ul);
+                        
+                    } else if (element.type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = element.content;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'contain';
+                        img.style.borderRadius = '4px';
+                        img.style.opacity = (element.opacity || 100) / 100;
+                        elementDiv.appendChild(img);
+                    } else if (element.type === 'chart') {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = element.width || 400;
+                        canvas.height = element.height || 300;
+                        elementDiv.appendChild(canvas);
+                        
+                        // Render chart using Chart.js
+                        setTimeout(() => {
+                            const ctx = canvas.getContext('2d');
+                            if (element.chartType === 'bar') {
+                                new Chart(ctx, {
+                                    type: 'bar',
+                                    data: element.data,
+                                    options: {
+                                        responsive: false,
+                                        maintainAspectRatio: false,
+                                        animation: {
+                                            duration: 1000,
+                                            easing: 'easeOutQuart'
+                                        }
+                                    }
+                                });
+                            } else if (element.chartType === 'pie') {
+                                new Chart(ctx, {
+                                    type: 'pie',
+                                    data: element.data,
+                                    options: {
+                                        responsive: false,
+                                        maintainAspectRatio: false,
+                                        animation: {
+                                            duration: 1000,
+                                            easing: 'easeOutQuart'
+                                        }
+                                    }
+                                });
+                            } else {
+                                new Chart(ctx, {
+                                    type: 'line',
+                                    data: element.data,
+                                    options: {
+                                        responsive: false,
+                                        maintainAspectRatio: false,
+                                        animation: {
+                                            duration: 1000,
+                                            easing: 'easeOutQuart'
+                                        }
+                                    }
+                                });
+                            }
+                        }, 100);
+                    }
+
+                    slideDiv.appendChild(elementDiv);
+                });
+
+                presentationSlides.appendChild(slideDiv);
+            });
+
+            showPresentationSlide(0);
+            presentationMode.classList.add('active');
+        }
+
+        function showPresentationSlide(index) {
+            const slides = document.querySelectorAll('.presentation-slide');
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (slides[index]) {
+                slides[index].classList.add('active');
+                const transition = slides[presentationSlideIndex]?.transition || 'fade';
+                slides[index].classList.add(`slide-transition-${transition}`);
+                
+                setTimeout(() => {
+                    slides[index].classList.remove(`slide-transition-${transition}`);
+                }, 500);
+                
+                presentationSlideIndex = index;
+                document.getElementById('slideCounter').textContent = `${index + 1} / ${slides.length}`;
+                
+                // Update presenter view if active
+                if (presenterMode) {
+                    updatePresenterView();
+                }
+            }
+        }
+        
+        function updatePresenterView() {
+            const currentSlideContainer = document.getElementById('currentSlideContainer');
+            const nextSlideContainer = document.getElementById('nextSlidePreview');
+            const presenterNotes = document.getElementById('presenterNotes');
+            
+            // Clear containers
+            currentSlideContainer.innerHTML = '';
+            nextSlideContainer.innerHTML = '';
+            
+            // Current slide
+            const currentSlide = slides[presentationSlideIndex];
+            if (currentSlide) {
+                const slideDiv = document.createElement('div');
+                slideDiv.style.width = '90%';
+                slideDiv.style.height = '80%';
+                slideDiv.style.background = currentSlide.background;
+                slideDiv.style.borderRadius = '8px';
+                slideDiv.style.position = 'relative';
+                
+                currentSlide.elements.forEach(element => {
+                    const elementDiv = document.createElement('div');
+                    elementDiv.style.position = 'absolute';
+                    elementDiv.style.left = element.x + 'px';
+                    elementDiv.style.top = element.y + 'px';
+                    elementDiv.style.width = (element.width || 'auto') + 'px';
+                    elementDiv.style.height = (element.height || 'auto') + 'px';
+                    
+                    if (element.type === 'text' || element.type === 'heading') {
+                        elementDiv.innerHTML = element.content.replace(/\n/g, '<br>');
+                        elementDiv.style.fontSize = element.fontSize + 'px';
+                        elementDiv.style.color = element.color;
+                        elementDiv.style.fontWeight = element.fontWeight;
+                        elementDiv.style.textAlign = element.textAlign;
+                        elementDiv.style.lineHeight = '1.5';
+                        
+                    } else if (element.type === 'bullets') {
+                        const ul = document.createElement('ul');
+                        ul.style.fontSize = element.fontSize + 'px';
+                        ul.style.color = element.color;
+                        ul.style.fontWeight = element.fontWeight;
+                        ul.style.listStyleType = 'disc';
+                        ul.style.paddingLeft = '20px';
+                        
+                        element.content.forEach(bullet => {
+                            const li = document.createElement('li');
+                            li.textContent = bullet;
+                            li.style.marginBottom = '8px';
+                            ul.appendChild(li);
+                        });
+                        
+                        elementDiv.appendChild(ul);
+                        
+                    } else if (element.type === 'image') {
+                        const img = document.createElement('img');
+                        img.src = element.content;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'contain';
+                        img.style.borderRadius = '4px';
+                        elementDiv.appendChild(img);
+                    }
+                    
+                    slideDiv.appendChild(elementDiv);
+                });
+                
+                currentSlideContainer.appendChild(slideDiv);
+                
+                // Notes
+                presenterNotes.value = currentSlide.notes || '';
+            }
+            
+            // Next slide preview
+            const nextSlide = slides[presentationSlideIndex + 1];
+            if (nextSlide) {
+                const previewDiv = document.createElement('div');
+                previewDiv.style.width = '100%';
+                previewDiv.style.height = '200px';
+                previewDiv.style.background = nextSlide.background;
+                previewDiv.style.borderRadius = '8px';
+                previewDiv.style.position = 'relative';
+                previewDiv.style.overflow = 'hidden';
+                
+                nextSlide.elements.slice(0, 2).forEach(element => {
+                    const elementDiv = document.createElement('div');
+                    elementDiv.style.position = 'absolute';
+                    elementDiv.style.left = (element.x * 0.3) + 'px';
+                    elementDiv.style.top = (element.y * 0.3) + 'px';
+                    elementDiv.style.width = ((element.width || 200) * 0.3) + 'px';
+                    elementDiv.style.height = ((element.height || 100) * 0.3) + 'px';
+                    elementDiv.style.fontSize = (element.fontSize || 16) * 0.3 + 'px';
+                    
+                    if (element.type === 'text' || element.type === 'heading') {
+                        elementDiv.textContent = element.content.substring(0, 20) + '...';
+                        elementDiv.style.color = element.color;
+                    }
+                    
+                    previewDiv.appendChild(elementDiv);
+                });
+                
+                nextSlideContainer.appendChild(previewDiv);
+            } else {
+                nextSlideContainer.innerHTML = '<p>No more slides</p>';
+            }
+        }
+        
+        function startTimer() {
+            startTime = new Date();
+            if (presentationTimer) clearInterval(presentationTimer);
+            
+            presentationTimer = setInterval(() => {
+                const elapsed = new Date() - startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('slideTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            if (presentationTimer) clearInterval(presentationTimer);
+        }
+
+        function nextSlide() {
+            if (presentationSlideIndex < slides.length - 1) {
+                showPresentationSlide(presentationSlideIndex + 1);
+            }
+        }
+
+        function previousSlide() {
+            if (presentationSlideIndex > 0) {
+                showPresentationSlide(presentationSlideIndex - 1);
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').classList.remove('active');
+            if (presenterMode) {
+                togglePresenterMode();
+            }
+        }
+
+        // Export Functions
+        function exportAsHTML() {
+            const htmlContent = generateHTMLExport();
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'presentation.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportAsPDF() {
+            const element = document.getElementById('slideCanvas');
+            const opt = {
+                margin: 10,
+                filename: 'presentation.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function generateHTMLExport() {
+            let slidesHTML = '';
+            
+            slides.forEach((slide, index) => {
+                let elementsHTML = '';
+                
+                slide.elements.forEach(element => {
+                    let elementHTML = '';
+                    const style = `position: absolute; left: ${element.x}px; top: ${element.y}px; width: ${element.width || 'auto'}; height: ${element.height || 'auto'};`;
+                    
+                    if (element.type === 'text' || element.type === 'heading') {
+                        const textStyle = `font-size: ${element.fontSize}px; color: ${element.color}; font-weight: ${element.fontWeight}; text-align: ${element.textAlign}; line-height: 1.5;`;
+                        elementHTML = `<div style="${style}${textStyle}">${element.content.replace(/\n/g, '<br>')}</div>`;
+                        
+                    } else if (element.type === 'bullets') {
+                        const listStyle = `font-size: ${element.fontSize}px; color: ${element.color}; font-weight: ${element.fontWeight}; list-style-type: disc; padding-left: 20px;`;
+                        const bullets = element.content.map(bullet => `<li style="margin-bottom: 8px;">${bullet}</li>`).join('');
+                        elementHTML = `<ul style="${style}${listStyle}">${bullets}</ul>`;
+                        
+                    } else if (element.type === 'image') {
+                        elementHTML = `<img src="${element.content}" style="${style}object-fit: contain; border-radius: 4px; opacity: ${(element.opacity || 100) / 100};">`;
+                    } else if (element.type === 'chart') {
+                        elementHTML = `<div style="${style}background: #f1f5f9; display: flex; justify-content: center; align-items: center; border-radius: 4px;">
+                            <canvas id="chart-${element.id}" width="${element.width}" height="${element.height}"></canvas>
+                        </div>
+                        <script>
+                            // Chart would be rendered here
+                        <\/script>`;
+                    }
+                    
+                    elementsHTML += elementHTML;
+                });
+                
+                slidesHTML += `
+                    <div class="slide" style="display: none; width: 100vw; height: 100vh; background: ${slide.background}; position: relative; padding: 40px;">
+                        ${elementsHTML}
+                    </div>
+                `;
+            });
+
+            return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Export</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: black; overflow: hidden; }
+        .slide { transition: all 0.5s ease-in-out; }
+        .slide.active { display: block !important; }
+        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 12px; border-radius: 8px; display: flex; gap: 10px; opacity: 0; transition: opacity 0.3s; }
+        body:hover .controls { opacity: 1; }
+        .controls button { margin: 0; padding: 8px 16px; background: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .slide-counter { position: fixed; top: 20px; right: 20px; color: white; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 4px; font-size: 1rem; }
+        
+        /* Slide transitions */
+        .slide-transition-slideRight { animation: slideInRight 0.5s ease-out; }
+        .slide-transition-slideLeft { animation: slideInLeft 0.5s ease-out; }
+        .slide-transition-fade { animation: fadeIn 0.5s ease-out; }
+        .slide-transition-zoom { animation: zoomIn 0.5s ease-out; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+</head>
+<body>
+    <div class="slide-counter" id="slideCounter">1 / ${slides.length}</div>
+    ${slidesHTML}
+    <div class="controls">
+        <button onclick="previousSlide()">← Previous</button>
+        <button onclick="nextSlide()">Next →</button>
+        <button onclick="toggleFullscreen()">Fullscreen</button>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = ${slides.length};
+        const slidesContainer = document.querySelectorAll('.slide');
+        
+        function showSlide(index) {
+            slidesContainer.forEach(slide => slide.classList.remove('active'));
+            slidesContainer[index].classList.add('active');
+            document.getElementById('slideCounter').textContent = (index + 1) + ' / ' + totalSlides;
+            currentSlide = index;
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') previousSlide();
+            if (e.key === 'Escape') document.exitFullscreen();
+            if (e.key === 'f' || e.key === 'F11') { e.preventDefault(); toggleFullscreen(); }
+        });
+        
+        // Initialize
+        showSlide(0);
+        
+        // Initialize charts
+        document.querySelectorAll('canvas').forEach(canvas => {
+            // Chart initialization would go here
+        });
+    </script>
+</body>
+</html>
+            `;
+        }
+
+        function showKeyboardShortcuts() {
+            alert(`Keyboard Shortcuts:
+• Delete: Remove selected element
+• Ctrl+S: Export as HTML
+• Ctrl+P: Toggle presenter view
+• Ctrl+Z: Undo
+• Ctrl+Y: Redo
+• Escape: Exit presentation/close modals
+• Arrow Keys: Navigate slides in presentation
+• F11: Toggle fullscreen in exported presentation
+• Space: Next slide in presentation`);
+        }
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>
