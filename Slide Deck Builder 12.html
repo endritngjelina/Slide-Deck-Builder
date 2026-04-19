@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Builder Pro | Enterprise Presentation Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3451b2;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 12px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .app-container {
+            display: flex;
+            height: calc(100vh - 40px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, rgba(13, 28, 39, 0.95) 0%, rgba(30, 60, 114, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .sidebar-header {
+            padding: 28px 24px;
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-header p {
+            font-size: 0.95rem;
+            opacity: 0.75;
+            font-weight: 400;
+            color: #e2e8f0;
+        }
+
+        .slides-panel {
+            flex: 1;
+            padding: 24px 16px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .slide-thumbnail {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .slide-thumbnail.active {
+            border-color: #4fd1c7;
+            box-shadow: 0 0 0 2px rgba(79, 209, 199, 0.2), 0 12px 32px rgba(79, 209, 199, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .slide-thumbnail h3 {
+            color: #2d3748;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .slide-number {
+            color: #4a5568;
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .controls {
+            padding: 24px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        .toolbar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 28px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 6px 0;
+            position: relative;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 48px;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(237, 242, 247, 0.9) 100%);
+            position: relative;
+            overflow: auto;
+        }
+
+        .slide-editor {
+            background: rgba(255, 255, 255, 0.98);
+            width: 900px;
+            height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .slide-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 32px;
+            color: #2d3748;
+            border: none;
+            outline: none;
+            width: 100%;
+            background: transparent;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .slide-title:focus {
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .slide-body {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            border: none;
+            outline: none;
+            width: 100%;
+            height: 420px;
+            background: transparent;
+            resize: none;
+            font-family: inherit;
+            color: #4a5568;
+            transition: var(--transition);
+        }
+
+        .slide-body:focus {
+            color: #2d3748;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #545b62 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #218838 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #bd2130 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            padding: 12px 28px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000000 0%, #1a202c 100%);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .presentation-slide {
+            background: rgba(255, 255, 255, 0.98);
+            width: 85vw;
+            height: 85vh;
+            border-radius: 20px;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .presentation-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        /* Theme Selector */
+        .theme-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: var(--transition);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-option.active {
+            border-color: #4fd1c7;
+            transform: scale(1.1);
+        }
+
+        .theme-default { background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%); }
+        .theme-ocean { background: linear-gradient(135deg, #2196F3 0%, #00BCD4 100%); }
+        .theme-forest { background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); }
+        .theme-sunset { background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%); }
+        .theme-corporate { background: linear-gradient(135deg, #37474F 0%, #546E7A 100%); }
+
+        /* Animation Effects */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Grid View */
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .grid-view .slide-thumbnail {
+            margin-bottom: 0;
+        }
+
+        /* Drag & Drop */
+        .slide-thumbnail.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(79, 209, 199, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .slide-editor {
+                width: 100%;
+                height: 500px;
+                padding: 32px;
+            }
+            
+            .slide-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .app-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+            }
+            
+            .slides-panel {
+                display: flex;
+                overflow-x: auto;
+                padding: 16px;
+            }
+            
+            .slide-thumbnail {
+                min-width: 200px;
+                margin-right: 16px;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 16px;
+            }
+            
+            .toolbar-section {
+                width: 100%;
+                padding: 8px 0;
+            }
+            
+            .editor-container {
+                padding: 24px;
+            }
+            
+            .slide-editor {
+                height: 450px;
+                padding: 24px;
+            }
+            
+            .slide-title {
+                font-size: 2rem;
+                margin-bottom: 24px;
+            }
+            
+            .slide-body {
+                font-size: 1.1rem;
+                height: 300px;
+            }
+        }
+
+        /* AI Suggestions Panel */
+        .ai-panel {
+            position: absolute;
+            right: 30px;
+            top: 30px;
+            width: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            z-index: 100;
+            display: none;
+        }
+
+        .ai-panel h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-suggestion {
+            background: var(--gray-light);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .ai-suggestion:hover {
+            background: #dee2e6;
+            transform: translateX(5px);
+        }
+
+        /* Version History */
+        .version-history {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            width: 300px;
+            z-index: 100;
+            display: none;
+        }
+
+        .version-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--gray-light);
+            cursor: pointer;
+        }
+
+        .version-item:hover {
+            background: var(--gray-light);
+        }
+
+        /* Collaboration Indicator */
+        .collaborator {
+            display: inline-flex;
+            align-items: center;
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-right: 8px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-presentation"></i> Slide Builder Pro</h1>
+                <p>Professional Presentation Tool</p>
+            </div>
+            
+            <div class="slides-panel">
+                <div id="slidesList" class="grid-view"></div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" onclick="addSlide()">
+                    <i class="fas fa-plus"></i> Add Slide
+                </button>
+                <button class="btn btn-danger" onclick="deleteSlide()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button class="btn btn-secondary" onclick="duplicateSlide()">
+                    <i class="fas fa-copy"></i> Duplicate
+                </button>
+                <button class="btn btn-outline" onclick="toggleGridView()">
+                    <i class="fas fa-th"></i> Grid View
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-section">
+                    <label><i class="fas fa-palette"></i> Theme:</label>
+                    <div class="theme-selector">
+                        <div class="theme-option theme-default active" onclick="setTheme('default')" title="Default"></div>
+                        <div class="theme-option theme-ocean" onclick="setTheme('ocean')" title="Ocean"></div>
+                        <div class="theme-option theme-forest" onclick="setTheme('forest')" title="Forest"></div>
+                        <div class="theme-option theme-sunset" onclick="setTheme('sunset')" title="Sunset"></div>
+                        <div class="theme-option theme-corporate" onclick="setTheme('corporate')" title="Corporate"></div>
+                    </div>
+                </div>
+                
+                <div class="toolbar-section">
+                    <button class="btn btn-success" onclick="startPresentation()">
+                        <i class="fas fa-play"></i> Present
+                    </button>
+                    <button class="btn btn-primary" onclick="exportHTML()">
+                        <i class="fas fa-file-export"></i> Export HTML
+                    </button>
+                    <button class="btn btn-secondary" onclick="showVersionHistory()">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                </div>
+                
+                <div class="toolbar-section">
+                    <button class="btn btn-secondary" onclick="toggleAIPanel()">
+                        <i class="fas fa-robot"></i> AI Suggestions
+                    </button>
+                    <button class="btn btn-outline" onclick="addBulletPoint()">
+                        <i class="fas fa-list"></i> Add Bullet
+                    </button>
+                </div>
+                
+                <div class="toolbar-section">
+                    <div class="collaborator">
+                        <i class="fas fa-user"></i> You (Online)
+                    </div>
+                    <div class="collaborator">
+                        <i class="fas fa-user"></i> Alex (Editing)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor -->
+            <div class="editor-container">
+                <div class="slide-editor" id="slideEditor">
+                    <input type="text" class="slide-title" id="slideTitle" placeholder="Enter slide title..." oninput="updateSlide()">
+                    <textarea class="slide-body" id="slideBody" placeholder="Enter slide content... Use • for bullet points" oninput="updateSlide()"></textarea>
+                    <div id="slideImage"></div>
+                </div>
+                
+                <!-- AI Panel -->
+                <div class="ai-panel" id="aiPanel">
+                    <h3><i class="fas fa-robot"></i> AI Suggestions</h3>
+                    <div class="ai-suggestion" onclick="applySuggestion('improve')">Improve wording for clarity</div>
+                    <div class="ai-suggestion" onclick="applySuggestion('shorten')">Shorten content</div>
+                    <div class="ai-suggestion" onclick="applySuggestion('expand')">Expand on this topic</div>
+                    <div class="ai-suggestion" onclick="applySuggestion('stats')">Add relevant statistics</div>
+                    <div class="ai-suggestion" onclick="applySuggestion('quote')">Suggest a relevant quote</div>
+                </div>
+                
+                <!-- Version History -->
+                <div class="version-history" id="versionHistory">
+                    <h3><i class="fas fa-history"></i> Version History</h3>
+                    <div class="version-item" onclick="restoreVersion(0)">5 minutes ago - Initial version</div>
+                    <div class="version-item" onclick="restoreVersion(1)">10 minutes ago - Added intro slide</div>
+                    <div class="version-item" onclick="restoreVersion(2)">15 minutes ago - Draft version</div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div>
+                    <span id="slideCount">Slide 1 of 1</span>
+                    <span class="auto-save-indicator" id="autoSaveIndicator">✓ Auto-saved</span>
+                </div>
+                <div>
+                    Words: <span id="wordCount">0</span> | 
+                    Characters: <span id="charCount">0</span> |
+                    <i class="fas fa-cloud"></i> Synced
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="presentation-slide" id="presentationSlide">
+            <div class="slide-counter" id="slideCounter">1 / 1</div>
+            <h1 id="presentationTitle"></h1>
+            <div id="presentationContent"></div>
+            <div id="presentationImage"></div>
+        </div>
+        <div class="presentation-controls">
+            <button class="btn btn-primary" onclick="previousSlide()">
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="btn btn-danger" onclick="exitPresentation()">
+                <i class="fas fa-times"></i> Exit
+            </button>
+            <button class="btn btn-primary" onclick="nextSlide()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let slides = [
+            {
+                id: 1,
+                title: 'Welcome to Slide Builder Pro',
+                content: '• Professional presentation tool\n• Advanced features for business use\n• Export to HTML and PDF\n• Multiple themes and transitions',
+                image: null,
+                theme: 'default'
+            }
+        ];
+        
+        let currentSlideIndex = 0;
+        let currentTheme = 'default';
+        let gridView = false;
+        let isDragging = false;
+        let dragStartIndex;
+
+        // Theme configurations
+        const themes = {
+            default: { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '#2c3e50' },
+            ocean: { bg: 'linear-gradient(135deg, #2196F3 0%, #00BCD4 100%)', text: '#1565C0' },
+            forest: { bg: 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)', text: '#2E7D32' },
+            sunset: { bg: 'linear-gradient(135deg, #FF5722 0%, #FF9800 100%)', text: '#BF360C' },
+            corporate: { bg: 'linear-gradient(135deg, #37474F 0%, #546E7A 100%)', text: '#263238' }
+        };
+
+        // Initialize app
+        function init() {
+            renderSlidesList();
+            loadSlide(0);
+            updateStatusBar();
+            
+            // Set up drag and drop
+            setupDragAndDrop();
+            
+            console.log('🚀 Slide Builder Pro initialized successfully!');
+        }
+
+        // Slide Management
+        function addSlide() {
+            const newSlide = {
+                id: Date.now(),
+                title: `New Slide ${slides.length + 1}`,
+                content: '• Your content here\n• Add more bullet points\n• Create engaging presentations',
+                image: null,
+                theme: currentTheme
+            };
+            
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            
+            renderSlidesList();
+            loadSlide(currentSlideIndex);
+            updateStatusBar();
+            
+            // Animation effect
+            document.getElementById('slideEditor').classList.add('fade-in');
+            setTimeout(() => {
+                document.getElementById('slideEditor').classList.remove('fade-in');
+            }, 500);
+        }
+
+        function deleteSlide() {
+            if (slides.length <= 1) {
+                alert('Cannot delete the last slide!');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this slide?')) {
+                slides.splice(currentSlideIndex, 1);
+                
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = slides.length - 1;
+                }
+                
+                renderSlidesList();
+                loadSlide(currentSlideIndex);
+                updateStatusBar();
+            }
+        }
+
+        function duplicateSlide() {
+            const currentSlide = slides[currentSlideIndex];
+            const duplicatedSlide = {
+                ...currentSlide,
+                id: Date.now(),
+                title: currentSlide.title + ' (Copy)'
+            };
+            
+            slides.splice(currentSlideIndex + 1, 0, duplicatedSlide);
+            currentSlideIndex++;
+            
+            renderSlidesList();
+            loadSlide(currentSlideIndex);
+            updateStatusBar();
+        }
+
+        function selectSlide(index) {
+            updateSlide(); // Save current slide changes
+            currentSlideIndex = index;
+            loadSlide(index);
+            updateStatusBar();
+            
+            // Update active thumbnail
+            document.querySelectorAll('.slide-thumbnail').forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+        }
+
+        function loadSlide(index) {
+            const slide = slides[index];
+            if (!slide) return;
+            
+            document.getElementById('slideTitle').value = slide.title;
+            document.getElementById('slideBody').value = slide.content;
+            
+            // Load image if exists
+            const imageContainer = document.getElementById('slideImage');
+            imageContainer.innerHTML = slide.image ? 
+                `<img src="${slide.image}" class="slide-image" alt="Slide image">` : '';
+            
+            // Apply theme
+            applyTheme(slide.theme || currentTheme);
+            
+            // Update word count
+            updateWordCount();
+        }
+
+        function updateSlide() {
+            const slide = slides[currentSlideIndex];
+            if (!slide) return;
+            
+            slide.title = document.getElementById('slideTitle').value;
+            slide.content = document.getElementById('slideBody').value;
+            slide.theme = currentTheme;
+            
+            renderSlidesList();
+            updateWordCount();
+        }
+
+        function renderSlidesList() {
+            const container = document.getElementById('slidesList');
+            container.innerHTML = '';
+            
+            slides.forEach((slide, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${index === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.setAttribute('draggable', 'true');
+                thumbnail.dataset.index = index;
+                
+                thumbnail.innerHTML = `
+                    <h3>${slide.title || 'Untitled Slide'}</h3>
+                    <div class="slide-number">Slide ${index + 1}</div>
+                `;
+                
+                container.appendChild(thumbnail);
+            });
+            
+            // Reattach drag events
+            setupDragAndDrop();
+        }
+
+        // Theme Management
+        function setTheme(theme) {
+            currentTheme = theme;
+            slides[currentSlideIndex].theme = theme;
+            applyTheme(theme);
+            
+            // Update active theme indicator
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`.theme-${theme}`).classList.add('active');
+        }
+
+        function applyTheme(theme) {
+            const themeConfig = themes[theme];
+            const editor = document.getElementById('slideEditor');
+            
+            editor.style.background = `${themeConfig.bg}`;
+            editor.style.color = themeConfig.text;
+        }
+
+        // Presentation Mode
+        function startPresentation() {
+            const presentationMode = document.getElementById('presentationMode');
+            presentationMode.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            presentationIndex = 0;
+            loadPresentationSlide(presentationIndex);
+        }
+
+        function loadPresentationSlide(index) {
+            const slide = slides[index];
+            if (!slide) return;
+            
+            const titleEl = document.getElementById('presentationTitle');
+            const contentEl = document.getElementById('presentationContent');
+            const imageEl = document.getElementById('presentationImage');
+            const counterEl = document.getElementById('slideCounter');
+            
+            titleEl.textContent = slide.title;
+            
+            // Format content with bullet points
+            const formattedContent = slide.content
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .map(line => line.startsWith('•') ? `<li>${line.substring(1).trim()}</li>` : `<p>${line}</p>`)
+                .join('');
+            
+            contentEl.innerHTML = formattedContent.includes('<li>') ? 
+                `<ul>${formattedContent}</ul>` : formattedContent;
+            
+            imageEl.innerHTML = slide.image ? 
+                `<img src="${slide.image}" style="max-width: 600px; max-height: 400px; border-radius: 8px; margin: 20px 0;">` : '';
+            
+            counterEl.textContent = `${index + 1} / ${slides.length}`;
+            
+            // Apply theme to presentation
+            const presentationSlide = document.getElementById('presentationSlide');
+            const themeConfig = themes[slide.theme || currentTheme];
+            presentationSlide.style.background = themeConfig.bg;
+            presentationSlide.style.color = themeConfig.text;
+        }
+
+        function nextSlide() {
+            if (presentationIndex < slides.length - 1) {
+                presentationIndex++;
+                loadPresentationSlide(presentationIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (presentationIndex > 0) {
+                presentationIndex--;
+                loadPresentationSlide(presentationIndex);
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Utility Functions
+        function updateStatusBar() {
+            document.getElementById('slideCount').textContent = 
+                `Slide ${currentSlideIndex + 1} of ${slides.length}`;
+        }
+
+        function updateWordCount() {
+            const title = document.getElementById('slideTitle').value;
+            const content = document.getElementById('slideBody').value;
+            const fullText = title + ' ' + content;
+            
+            const words = fullText.trim() ? fullText.trim().split(/\s+/).length : 0;
+            const chars = fullText.length;
+            
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = chars;
+        }
+
+        // Drag and Drop for slide reordering
+        function setupDragAndDrop() {
+            const thumbnails = document.querySelectorAll('.slide-thumbnail');
+            
+            thumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('dragstart', dragStart);
+                thumbnail.addEventListener('dragover', dragOver);
+                thumbnail.addEventListener('drop', dragDrop);
+                thumbnail.addEventListener('dragend', dragEnd);
+            });
+        }
+
+        function dragStart(e) {
+            isDragging = true;
+            dragStartIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        function dragDrop(e) {
+            e.preventDefault();
+            const dragEndIndex = parseInt(this.dataset.index);
+            swapSlides(dragStartIndex, dragEndIndex);
+        }
+
+        function dragEnd(e) {
+            this.classList.remove('dragging');
+            isDragging = false;
+        }
+
+        function swapSlides(fromIndex, toIndex) {
+            const temp = slides[fromIndex];
+            slides[fromIndex] = slides[toIndex];
+            slides[toIndex] = temp;
+            
+            currentSlideIndex = toIndex;
+            renderSlidesList();
+            loadSlide(currentSlideIndex);
+            updateStatusBar();
+        }
+
+        // Grid View Toggle
+        function toggleGridView() {
+            gridView = !gridView;
+            const slidesPanel = document.querySelector('.slides-panel');
+            
+            if (gridView) {
+                slidesPanel.classList.add('grid-view');
+            } else {
+                slidesPanel.classList.remove('grid-view');
+            }
+        }
+
+        // AI Suggestions Panel
+        function toggleAIPanel() {
+            const aiPanel = document.getElementById('aiPanel');
+            aiPanel.style.display = aiPanel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function applySuggestion(type) {
+            const content = document.getElementById('slideBody');
+            let suggestion = '';
+            
+            switch(type) {
+                case 'improve':
+                    suggestion = "Consider refining your wording for enhanced clarity and impact.";
+                    break;
+                case 'shorten':
+                    suggestion = "This content could be more concise for better audience engagement.";
+                    break;
+                case 'expand':
+                    suggestion = "You might expand on this point with additional details or examples.";
+                    break;
+                case 'stats':
+                    suggestion = "Adding relevant statistics could strengthen your argument.";
+                    break;
+                case 'quote':
+                    suggestion = "A relevant quote from an expert could add authority to this point.";
+                    break;
+            }
+            
+            content.value += '\n\n' + suggestion;
+            updateSlide();
+        }
+
+        // Version History
+        function showVersionHistory() {
+            const versionHistory = document.getElementById('versionHistory');
+            versionHistory.style.display = versionHistory.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function restoreVersion(index) {
+            // In a real app, this would restore from saved versions
+            alert(`Restoring version ${index + 1}`);
+            document.getElementById('versionHistory').style.display = 'none';
+        }
+
+        // Export Functions
+        function exportHTML() {
+            // Simulate export functionality
+            alert('Presentation exported as HTML!');
+        }
+
+        function addBulletPoint() {
+            const textarea = document.getElementById('slideBody');
+            const cursorPosition = textarea.selectionStart;
+            const textBefore = textarea.value.substring(0, cursorPosition);
+            const textAfter = textarea.value.substring(cursorPosition);
+            
+            const newBullet = textBefore.endsWith('\n') || textBefore === '' ? '• ' : '\n• ';
+            textarea.value = textBefore + newBullet + textAfter;
+            textarea.selectionStart = textarea.selectionEnd = cursorPosition + newBullet.length;
+            textarea.focus();
+            updateSlide();
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
