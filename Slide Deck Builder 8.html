@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Deck Builder Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #7c77c6;
+            --secondary: #ff4d4d;
+            --accent: #78c8ff;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --light: #f8f9fa;
+            --success: #4ade80;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --info: #60a5fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--dark);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            color: var(--light);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 77, 77, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: rgba(15, 15, 15, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-95%);
+        }
+
+        .sidebar.collapsed .collapse-btn i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(120, 119, 198, 0.8) 20%, 
+                rgba(255, 77, 77, 0.8) 50%, 
+                rgba(120, 200, 255, 0.8) 80%, 
+                transparent 100%);
+        }
+
+        .logo {
+            padding: 30px 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .logo::after {
+            content: 'PROFESSIONAL EDITION';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .collapse-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            padding: 5px;
+            border-radius: 6px;
+        }
+
+        .collapse-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .controls {
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 100%);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: rgba(120, 119, 198, 0.2);
+            border-color: rgba(120, 119, 198, 0.4);
+            box-shadow: 
+                0 8px 32px rgba(120, 119, 198, 0.3),
+                0 0 0 1px rgba(120, 119, 198, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .btn.danger:hover {
+            background: rgba(255, 77, 77, 0.2);
+            border-color: rgba(255, 77, 77, 0.4);
+            box-shadow: 
+                0 8px 32px rgba(255, 77, 77, 0.3),
+                0 0 0 1px rgba(255, 77, 77, 0.2);
+        }
+
+        .btn.success:hover {
+            background: rgba(120, 200, 255, 0.2);
+            border-color: rgba(120, 200, 255, 0.4);
+            box-shadow: 
+                0 8px 32px rgba(120, 200, 255, 0.3),
+                0 0 0 1px rgba(120, 200, 255, 0.2);
+        }
+
+        .slide-thumbnails {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .slide-thumb {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-thumb::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                transparent 100%);
+            transition: left 0.6s;
+        }
+
+        .slide-thumb:hover::before {
+            left: 100%;
+        }
+
+        .slide-thumb:hover {
+            transform: scale(1.05) translateX(8px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(120, 119, 198, 0.3);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(120, 119, 198, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .slide-thumb.active {
+            background: rgba(120, 119, 198, 0.15);
+            border-color: rgba(120, 119, 198, 0.5);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 0 2px rgba(120, 119, 198, 0.3),
+                0 8px 32px rgba(120, 119, 198, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .slide-thumb h4 {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slide-thumb h4 span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .slide-preview {
+            width: 100%;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide-preview-content {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            background: white;
+            color: #333;
+            font-size: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slide-preview-title {
+            font-weight: bold;
+            text-align: center;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slide-preview-bullets {
+            font-size: 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .slide-preview-bullets li {
+            list-style: none;
+            position: relative;
+            padding-left: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slide-preview-bullets li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(5, 5, 5, 0.5);
+        }
+
+        .toolbar {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            position: relative;
+        }
+
+        .toolbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(120, 119, 198, 0.3) 50%, 
+                transparent 100%);
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .toolbar-btn:hover::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .toolbar-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(120, 119, 198, 0.3);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .toolbar-btn.active {
+            background: rgba(120, 119, 198, 0.2);
+            border-color: rgba(120, 119, 198, 0.5);
+            color: white;
+            box-shadow: 
+                0 0 0 1px rgba(120, 119, 198, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: rgba(120, 119, 198, 0.5);
+            box-shadow: 0 0 0 3px rgba(120, 119, 198, 0.1);
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            background: transparent;
+            padding: 25px;
+            gap: 25px;
+        }
+
+        .slide-editor {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-editor::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(120, 119, 198, 0.5) 30%, 
+                rgba(255, 77, 77, 0.5) 50%, 
+                rgba(120, 200, 255, 0.5) 70%, 
+                transparent 100%);
+        }
+
+        .slide-canvas {
+            width: 100%;
+            height: 100%;
+            padding: 50px;
+            min-height: 600px;
+            position: relative;
+            background: white;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-element {
+            margin-bottom: 25px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.5);
+            width: 80%;
+        }
+
+        .slide-element:hover {
+            border-color: rgba(120, 119, 198, 0.4);
+            background: rgba(120, 119, 198, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 10px 30px rgba(120, 119, 198, 0.1),
+                0 0 0 1px rgba(120, 119, 198, 0.1);
+        }
+
+        .slide-element.selected {
+            border-color: rgba(255, 77, 77, 0.6);
+            background: rgba(255, 77, 77, 0.05);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 0 3px rgba(255, 77, 77, 0.2),
+                0 15px 40px rgba(255, 77, 77, 0.15);
+        }
+
+        .element-controls {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            display: none;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .slide-element:hover .element-controls,
+        .slide-element.selected .element-controls {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .control-btn:hover {
+            background: rgba(120, 119, 198, 0.9);
+            border-color: rgba(120, 119, 198, 0.5);
+            transform: scale(1.1);
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .slide-content {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #34495e;
+        }
+
+        .slide-bullets {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .slide-bullets li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #34495e;
+        }
+
+        .slide-bullets li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-size: 14px;
+        }
+
+        .slide-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            width: 350px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            overflow-y: auto;
+            color: white;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .properties-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .properties-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .properties-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .property-group {
+            margin-bottom: 30px;
+        }
+
+        .property-group h3 {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid;
+            border-image: linear-gradient(90deg, 
+                rgba(120, 119, 198, 0.6) 0%, 
+                rgba(255, 77, 77, 0.6) 50%, 
+                rgba(120, 200, 255, 0.6) 100%) 1;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-field {
+            margin-bottom: 18px;
+        }
+
+        .property-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .property-field input,
+        .property-field select,
+        .property-field textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .property-field input:focus,
+        .property-field select:focus,
+        .property-field textarea:focus {
+            outline: none;
+            border-color: rgba(120, 119, 198, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 0 3px rgba(120, 119, 198, 0.1),
+                0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-picker {
+            width: 60px !important;
+            height: 45px;
+            border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 12px !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-picker:hover {
+            transform: scale(1.05);
+            border-color: rgba(120, 119, 198, 0.3) !important;
+        }
+
+        /* Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            display: none;
+            z-index: 1000;
+        }
+
+        .presentation-slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: white;
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1001;
+        }
+
+        .pres-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Enhanced Animations */
+        @keyframes slideInRight {
+            from { 
+                transform: translateX(100%) scale(0.8); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from { 
+                transform: translateX(-100%) scale(0.8); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                filter: blur(5px); 
+                transform: scale(0.95);
+            }
+            to { 
+                opacity: 1; 
+                filter: blur(0); 
+                transform: scale(1);
+            }
+        }
+
+        @keyframes zoomIn {
+            from { 
+                transform: scale(0.5) rotate(-5deg); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            to { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(120, 119, 198, 0.4);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 0 15px rgba(120, 119, 198, 0);
+                transform: scale(1.02);
+            }
+        }
+
+        .slide-transition-slideRight { 
+            animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .slide-transition-slideLeft { 
+            animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .slide-transition-fade { 
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .slide-transition-zoom { 
+            animation: zoomIn 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        /* Floating elements */
+        .btn.success {
+            animation: pulse 3s infinite;
+        }
+
+        .slide-thumb.active {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Presentation Mode Enhancements */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            display: none;
+            z-index: 1000;
+        }
+
+        .presentation-slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+            background: white;
+            position: relative;
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1001;
+        }
+
+        .pres-btn {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pres-btn:hover {
+            background: rgba(120, 119, 198, 0.9);
+            border-color: rgba(120, 119, 198, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .sidebar { width: 280px; }
+            .properties-panel { width: 300px; }
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar { width: 250px; }
+            .properties-panel { width: 280px; }
+            .editor-container { padding: 20px; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 200px; }
+            .properties-panel { display: none; }
+            .toolbar { padding: 15px 20px; }
+            .toolbar-group { gap: 8px; }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { display: none; }
+            .toolbar { flex-wrap: wrap; }
+            .editor-container { padding: 15px; }
+        }
+
+        /* Additional Premium Effects */
+        .slide-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 77, 77, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Improved scrollbars for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, 
+                rgba(120, 119, 198, 0.6) 0%, 
+                rgba(255, 77, 77, 0.6) 100%);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, 
+                rgba(120, 119, 198, 0.8) 0%, 
+                rgba(255, 77, 77, 0.8) 100%);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .status-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(120, 119, 198, 0.3) 50%, 
+                transparent 100%);
+        }
+
+        #statusText {
+            color: rgba(120, 200, 255, 0.9);
+        }
+
+        /* Modal Improvements */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(120, 119, 198, 0.8) 0%, 
+                rgba(255, 77, 77, 0.8) 50%, 
+                rgba(120, 200, 255, 0.8) 100%);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal h2 {
+            margin-bottom: 25px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .theme-option {
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                transparent 100%);
+            transition: left 0.6s;
+        }
+
+        .theme-option:hover::before {
+            left: 100%;
+        }
+
+        .theme-option:hover {
+            border-color: rgba(120, 119, 198, 0.4);
+            transform: scale(1.05) translateY(-5px);
+            background: rgba(120, 119, 198, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-option.selected {
+            border-color: rgba(120, 119, 198, 0.6);
+            background: rgba(120, 119, 198, 0.15);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 0 2px rgba(120, 119, 198, 0.3),
+                0 10px 30px rgba(120, 119, 198, 0.2);
+        }
+
+        .theme-option h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .theme-option p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .sidebar { width: 250px; }
+            .properties-panel { width: 250px; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .properties-panel { display: none; }
+        }
+
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .ai-assistant:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+
+        .ai-assistant i {
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast i {
+            font-size: 1.2rem;
+        }
+
+        .toast.success i {
+            color: var(--success);
+        }
+
+        .toast.error i {
+            color: var(--danger);
+        }
+
+        .toast.info i {
+            color: var(--info);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-presentation"></i> DeckBuilder Pro</h1>
+                <button class="collapse-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="addSlide()">
+                    <i class="fas fa-plus"></i>
+                    <span>New Slide</span>
+                </button>
+                <button class="btn" onclick="duplicateSlide()">
+                    <i class="fas fa-copy"></i>
+                    <span>Duplicate</span>
+                </button>
+                <button class="btn danger" onclick="deleteSlide()">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+                <button class="btn success" onclick="startPresentation()">
+                    <i class="fas fa-play"></i>
+                    <span>Present</span>
+                </button>
+                <button class="btn" onclick="showThemes()">
+                    <i class="fas fa-palette"></i>
+                    <span>Themes</span>
+                </button>
+                <button class="btn" onclick="exportHTML()">
+                    <i class="fas fa-download"></i>
+                    <span>Export HTML</span>
+                </button>
+                <button class="btn" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+            
+            <div class="slide-thumbnails" id="slideThumbnails">
+                <!-- Slide thumbnails will be generated here -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn active" onclick="setTool('select')">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>Select</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="setTool('title')">
+                        <i class="fas fa-heading"></i>
+                        <span>Title</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="setTool('text')">
+                        <i class="fas fa-font"></i>
+                        <span>Text</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="setTool('bullets')">
+                        <i class="fas fa-list-ul"></i>
+                        <span>Bullets</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="setTool('image')">
+                        <i class="fas fa-image"></i>
+                        <span>Image</span>
+                    </button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <select id="transitionSelect" onchange="updateSlideTransition()">
+                        <option value="fade">Fade</option>
+                        <option value="slideRight">Slide Right</option>
+                        <option value="slideLeft">Slide Left</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                
+                <div class="toolbar-group" style="margin-left: auto;">
+                    <button class="toolbar-btn" onclick="undo()">
+                        <i class="fas fa-undo"></i>
+                        <span>Undo</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="redo()">
+                        <i class="fas fa-redo"></i>
+                        <span>Redo</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="editor-container">
+                <div class="slide-editor">
+                    <div class="slide-canvas" id="slideCanvas" onclick="handleCanvasClick(event)">
+                        <!-- Slide content will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel">
+            <div class="property-group">
+                <h3><i class="fas fa-cog"></i> Element Properties</h3>
+                <div id="elementProperties">
+                    <p style="color: #7f8c8d; text-align: center; padding: 20px;">
+                        Select an element to edit its properties
+                    </p>
+                </div>
+            </div>
+            
+            <div class="property-group">
+                <h3><i class="fas fa-paint-brush"></i> Slide Style</h3>
+                <div class="property-field">
+                    <label>Background Color</label>
+                    <input type="color" class="color-picker" id="bgColor" onchange="updateSlideBackground()" value="#ffffff">
+                </div>
+                <div class="property-field">
+                    <label>Background Image</label>
+                    <input type="file" id="bgImage" accept="image/*" onchange="uploadBackgroundImage()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="presentation-slide" id="presentationSlide">
+            <!-- Current slide content -->
+        </div>
+        <div class="presentation-controls">
+            <button class="pres-btn" onclick="prevSlide()">
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <span id="presCounter" style="color: white; padding: 0 15px;">1 / 1</span>
+            <button class="pres-btn" onclick="nextSlide()">
+                <i class="fas fa-chevron-right"></i> Next
+            </button>
+            <button class="pres-btn" onclick="exitPresentation()">
+                <i class="fas fa-times"></i> Exit
+            </button>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div class="modal" id="themeModal">
+        <div class="modal-content">
+            <h2><i class="fas fa-palette"></i> Choose Theme</h2>
+            <div class="theme-grid">
+                <div class="theme-option selected" onclick="selectTheme('default')">
+                    <h4>Default</h4>
+                    <p>Clean & Professional</p>
+                </div>
+                <div class="theme-option" onclick="selectTheme('dark')">
+                    <h4>Dark</h4>
+                    <p>Sleek & Modern</p>
+                </div>
+                <div class="theme-option" onclick="selectTheme('corporate')">
+                    <h4>Corporate</h4>
+                    <p>Business Ready</p>
+                </div>
+                <div class="theme-option" onclick="selectTheme('creative')">
+                    <h4>Creative</h4>
+                    <p>Bold & Colorful</p>
+                </div>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn" onclick="closeModal('themeModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span id="statusText">Ready</span>
+        <span id="slideCounter">Slide 1 of 1</span>
+    </div>
+
+    <!-- AI Assistant -->
+    <div class="ai-assistant" onclick="showAIAssistant()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Action completed successfully</span>
+    </div>
+
+    <script>
+        // Application State
+        let slides = [{
+            id: 1,
+            title: 'Welcome to DeckBuilder Pro',
+            elements: [
+                {
+                    type: 'title',
+                    content: 'Welcome to DeckBuilder Pro',
+                    style: { fontSize: '2.5rem', color: '#2c3e50', textAlign: 'center' }
+                },
+                {
+                    type: 'text',
+                    content: 'Create stunning presentations with ease',
+                    style: { fontSize: '1.2rem', color: '#34495e', textAlign: 'center' }
+                }
+            ],
+            transition: 'fade',
+            background: '#ffffff'
+        }];
+        
+        let currentSlide = 0;
+        let selectedElement = null;
+        let currentTool = 'select';
+        let presentationIndex = 0;
+        let history = [JSON.stringify(slides)];
+        let historyIndex = 0;
+        let currentTheme = 'default';
+        let sidebarCollapsed = false;
+
+        // Initialize Application
+        function init() {
+            renderSlides();
+            renderCurrentSlide();
+            updateStatus();
+            showToast('DeckBuilder Pro initialized!', 'success');
+        }
+
+        // Slide Management
+        function addSlide() {
+            saveState();
+            
+            const newSlide = {
+                id: Date.now(),
+                title: `Slide ${slides.length + 1}`,
+                elements: [{
+                    type: 'title',
+                    content: `Slide ${slides.length + 1}`,
+                    style: { fontSize: '2.5rem', color: '#2c3e50', textAlign: 'center' }
+                }],
+                transition: 'fade',
+                background: '#ffffff'
+            };
+            
+            slides.push(newSlide);
+            currentSlide = slides.length - 1;
+            renderSlides();
+            renderCurrentSlide();
+            updateStatus();
+            showToast('New slide added', 'success');
+        }
+
+        function duplicateSlide() {
+            if (slides.length === 0) return;
+            
+            saveState();
+            
+            const slideToClone = JSON.parse(JSON.stringify(slides[currentSlide]));
+            slideToClone.id = Date.now();
+            slideToClone.title += ' (Copy)';
+            
+            slides.splice(currentSlide + 1, 0, slideToClone);
+            currentSlide++;
+            renderSlides();
+            renderCurrentSlide();
+            updateStatus();
+            showToast('Slide duplicated', 'success');
+        }
+
+        function deleteSlide() {
+            if (slides.length <= 1) {
+                showToast('Cannot delete the last slide', 'error');
+                return;
+            }
+            
+            saveState();
+            
+            slides.splice(currentSlide, 1);
+            if (currentSlide >= slides.length) {
+                currentSlide = slides.length - 1;
+            }
+            
+            renderSlides();
+            renderCurrentSlide();
+            updateStatus();
+            showToast('Slide deleted', 'success');
+        }
+
+        function selectSlide(index) {
+            currentSlide = index;
+            selectedElement = null;
+            renderSlides();
+            renderCurrentSlide();
+            updateStatus();
+        }
+
+        // Rendering
+        function renderSlides() {
+            const container = document.getElementById('slideThumbnails');
+            container.innerHTML = '';
+            
+            slides.forEach((slide, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = `slide-thumb ${index === currentSlide ? 'active' : ''}`;
+                thumb.onclick = (e) => {
+                    e.stopPropagation();
+                    selectSlide(index);
+                };
+                
+                // Count element types
+                const titleCount = slide.elements.filter(el => el.type === 'title').length;
+                const textCount = slide.elements.filter(el => el.type === 'text').length;
+                const bulletsCount = slide.elements.filter(el => el.type === 'bullets').length;
+                const imageCount = slide.elements.filter(el => el.type === 'image').length;
+                
+                // Generate preview content
+                let previewContent = '';
+                if (slide.elements.length > 0) {
+                    const firstEl = slide.elements[0];
+                    previewContent = `
+                        <div class="slide-preview">
+                            <div class="slide-preview-content">
+                                <div class="slide-preview-title">${slide.title}</div>
+                                <ul class="slide-preview-bullets">
+                                    <li>${titleCount} Title${titleCount !== 1 ? 's' : ''}</li>
+                                    <li>${textCount} Text${textCount !== 1 ? 's' : ''}</li>
+                                    <li>${bulletsCount} Bullet${bulletsCount !== 1 ? 's' : ''}</li>
+                                    <li>${imageCount} Image${imageCount !== 1 ? 's' : ''}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    previewContent = `
+                        <div class="slide-preview">
+                            <div>Empty slide</div>
+                        </div>
+                    `;
+                }
+                
+                thumb.innerHTML = `
+                    <h4>Slide ${index + 1} <span>${slide.elements.length} elements</span></h4>
+                    ${previewContent}
+                `;
+                
+                container.appendChild(thumb);
+            });
+        }
+
+        function renderCurrentSlide() {
+            const canvas = document.getElementById('slideCanvas');
+            const slide = slides[currentSlide];
+            
+            if (!slide) return;
+            
+            // Apply background
+            if (slide.background.startsWith('linear-gradient')) {
+                canvas.style.background = slide.background;
+            } else if (slide.background.startsWith('url')) {
+                canvas.style.backgroundImage = slide.background;
+                canvas.style.backgroundSize = 'cover';
+                canvas.style.backgroundPosition = 'center';
+            } else {
+                canvas.style.backgroundColor = slide.background;
+                canvas.style.backgroundImage = 'none';
+            }
+            
+            canvas.innerHTML = '';
+            
+            slide.elements.forEach((element, index) => {
+                const el = createElement(element, index);
+                canvas.appendChild(el);
+            });
+            
+            document.getElementById('transitionSelect').value = slide.transition;
+            document.getElementById('bgColor').value = slide.background.startsWith('#') ? slide.background : '#ffffff';
+        }
+
+        function createElement(element, index) {
+            const div = document.createElement('div');
+            div.className = 'slide-element';
+            div.dataset.index = index;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                selectElement(index, e);
+            };
+            
+            // Apply styles
+            Object.assign(div.style, element.style);
+            
+            // Create content based on type
+            switch (element.type) {
+                case 'title':
+                case 'text':
+                    div.innerHTML = `
+                        <div>${element.content}</div>
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="event.stopPropagation(); editElement(${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="event.stopPropagation(); deleteElement(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'bullets':
+                    const bullets = element.content.split('\n').filter(item => item.trim());
+                    div.innerHTML = `
+                        <ul class="slide-bullets">
+                            ${bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                        </ul>
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="event.stopPropagation(); editElement(${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="event.stopPropagation(); deleteElement(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'image':
+                    div.innerHTML = `
+                        <img src="${element.content}" alt="Slide Image" class="slide-image" style="max-width: 100%; height: auto;">
+                        <div class="element-controls">
+                            <button class="control-btn" onclick="event.stopPropagation(); editElement(${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="control-btn" onclick="event.stopPropagation(); deleteElement(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            return div;
+        }
+
+        // Element Management
+        function selectElement(index, event) {
+            event.stopPropagation();
+            selectedElement = index;
+            
+            // Update visual selection
+            document.querySelectorAll('.slide-element').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+            
+            renderElementProperties();
+        }
+
+        function editElement(index) {
+            const element = slides[currentSlide].elements[index];
+            let newContent;
+            
+            switch (element.type) {
+                case 'title':
+                case 'text':
+                    newContent = prompt('Edit text:', element.content);
+                    if (newContent !== null) {
+                        saveState();
+                        element.content = newContent;
+                    }
+                    break;
+                    
+                case 'bullets':
+                    newContent = prompt('Edit bullets (one per line):', element.content);
+                    if (newContent !== null) {
+                        saveState();
+                        element.content = newContent;
+                    }
+                    break;
+                    
+                case 'image':
+                    newContent = prompt('Image URL:', element.content);
+                    if (newContent !== null) {
+                        saveState();
+                        element.content = newContent;
+                    }
+                    break;
+            }
+            
+            renderCurrentSlide();
+            showToast('Element updated', 'success');
+        }
+
+        function deleteElement(index) {
+            saveState();
+            slides[currentSlide].elements.splice(index, 1);
+            selectedElement = null;
+            renderCurrentSlide();
+            renderElementProperties();
+            showToast('Element deleted', 'success');
+        }
+
+        function renderElementProperties() {
+            const container = document.getElementById('elementProperties');
+            
+            if (selectedElement === null) {
+                container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">Select an element to edit its properties</p>';
+                return;
+            }
+            
+            const element = slides[currentSlide].elements[selectedElement];
+            
+            container.innerHTML = `
+                <div class="property-field">
+                    <label>Content</label>
+                    <textarea onchange="updateElementContent(this.value)" rows="3">${element.content}</textarea>
+                </div>
+                <div class="property-field">
+                    <label>Font Size</label>
+                    <input type="range" min="12" max="72" value="${parseInt(element.style.fontSize) || 16}" 
+                           onchange="updateElementStyle('fontSize', this.value + 'px')">
+                </div>
+                <div class="property-field">
+                    <label>Text Color</label>
+                    <input type="color" class="color-picker" value="${element.style.color || '#000000'}" 
+                           onchange="updateElementStyle('color', this.value)">
+                </div>
+                <div class="property-field">
+                    <label>Text Alignment</label>
+                    <select onchange="updateElementStyle('textAlign', this.value)">
+                        <option value="left" ${element.style.textAlign === 'left' ? 'selected' : ''}>Left</option>
+                        <option value="center" ${element.style.textAlign === 'center' ? 'selected' : ''}>Center</option>
+                        <option value="right" ${element.style.textAlign === 'right' ? 'selected' : ''}>Right</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        function updateElementStyle(property, value) {
+            if (selectedElement === null) return;
+            
+            saveState();
+            slides[currentSlide].elements[selectedElement].style[property] = value;
+            renderCurrentSlide();
+        }
+
+        function updateElementContent(content) {
+            if (selectedElement === null) return;
+            
+            saveState();
+            slides[currentSlide].elements[selectedElement].content = content;
+            renderCurrentSlide();
+        }
+
+        function updateSlideBackground() {
+            const color = document.getElementById('bgColor').value;
+            saveState();
+            slides[currentSlide].background = color;
+            renderCurrentSlide();
+            showToast('Background updated', 'success');
+        }
+
+        function uploadBackgroundImage() {
+            const input = document.getElementById('bgImage');
+            const file = input.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    saveState();
+                    slides[currentSlide].background = `url(${e.target.result})`;
+                    renderCurrentSlide();
+                    showToast('Background image uploaded', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateSlideTransition() {
+            const transition = document.getElementById('transitionSelect').value;
+            saveState();
+            slides[currentSlide].transition = transition;
+            showToast(`Transition set to ${transition}`, 'success');
+        }
+
+        // Presentation Mode
+        function startPresentation() {
+            if (slides.length === 0) return;
+            
+            presentationIndex = 0;
+            document.getElementById('presentationMode').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            renderPresentationSlide();
+            document.addEventListener('keydown', handlePresentationKeys);
+        }
+
+        function renderPresentationSlide() {
+            const container = document.getElementById('presentationSlide');
+            const slide = slides[presentationIndex];
+            
+            if (!slide) return;
+            
+            // Apply transition class
+            container.className = `presentation-slide slide-transition-${slide.transition}`;
+            
+            // Apply background
+            if (slide.background.startsWith('linear-gradient')) {
+                container.style.background = slide.background;
+            } else if (slide.background.startsWith('url')) {
+                container.style.backgroundImage = slide.background;
+                container.style.backgroundSize = 'cover';
+                container.style.backgroundPosition = 'center';
+            } else {
+                container.style.backgroundColor = slide.background;
+                container.style.backgroundImage = 'none';
+            }
+            
+            container.innerHTML = '';
+            
+            slide.elements.forEach((element) => {
+                const div = document.createElement('div');
+                
+                switch (element.type) {
+                    case 'title':
+                        const title = document.createElement('h1');
+                        title.textContent = element.content;
+                        Object.assign(title.style, element.style);
+                        div.appendChild(title);
+                        break;
+                        
+                    case 'text':
+                        const text = document.createElement('p');
+                        text.textContent = element.content;
+                        Object.assign(text.style, element.style);
+                        div.appendChild(text);
+                        break;
+                        
+                    case 'bullets':
+                        const ul = document.createElement('ul');
+                        ul.className = 'slide-bullets';
+                        const bullets = element.content.split('\n').filter(item => item.trim());
+                        bullets.forEach(bullet => {
+                            const li = document.createElement('li');
+                            li.textContent = bullet;
+                            ul.appendChild(li);
+                        });
+                        Object.assign(ul.style, element.style);
+                        div.appendChild(ul);
+                        break;
+                        
+                    case 'image':
+                        const img = document.createElement('img');
+                        img.src = element.content;
+                        img.className = 'slide-image';
+                        img.style.maxWidth = '80%';
+                        img.style.maxHeight = '70vh';
+                        div.appendChild(img);
+                        break;
+                }
+                
+                container.appendChild(div);
+            });
+            
+            document.getElementById('presCounter').textContent = `${presentationIndex + 1} / ${slides.length}`;
+        }
+
+        function nextSlide() {
+            if (presentationIndex < slides.length - 1) {
+                presentationIndex++;
+                renderPresentationSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (presentationIndex > 0) {
+                presentationIndex--;
+                renderPresentationSlide();
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').style.display = 'none';
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', handlePresentationKeys);
+        }
+
+        function handlePresentationKeys(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'Escape') {
+                exitPresentation();
+            }
+        }
+
+        // Theme Management
+        function showThemes() {
+            document.getElementById('themeModal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function selectTheme(theme) {
+            currentTheme = theme;
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => option.classList.remove('selected'));
+            event.target.closest('.theme-option').classList.add('selected');
+            
+            // Apply theme to current slide
+            slides[currentSlide].background = themes[theme].background;
+            renderCurrentSlide();
+            showToast(`Theme applied: ${theme}`, 'success');
+        }
+
+        // Export Functions
+        function exportHTML() {
+            const dataStr = "data:text/html;charset=utf-8," + encodeURIComponent(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>DeckBuilder Pro Presentation</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .slide { min-height: 100vh; padding: 50px; }
+                    </style>
+                </head>
+                <body>
+                    ${slides.map(slide => `
+                        <div class="slide" style="background: ${slide.background}">
+                            ${slide.elements.map(el => {
+                                if (el.type === 'title') return `<h1 style="${cssStyleToString(el.style)}">${el.content}</h1>`;
+                                if (el.type === 'text') return `<p style="${cssStyleToString(el.style)}">${el.content}</p>`;
+                                if (el.type === 'bullets') {
+                                    return `<ul style="${cssStyleToString(el.style)}">
+                                        ${el.content.split('\n').map(b => `<li>${b}</li>`).join('')}
+                                    </ul>`;
+                                }
+                                if (el.type === 'image') return `<img src="${el.content}" style="max-width: 80%">`;
+                                return '';
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </body>
+                </html>
+            `);
+            
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute('href', dataStr);
+            downloadAnchor.setAttribute('download', 'presentation.html');
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+            
+            showToast('HTML exported successfully', 'success');
+        }
+
+        function cssStyleToString(style) {
+            return Object.entries(style).map(([key, value]) => 
+                `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}:${value};`
+            ).join(' ');
+        }
+
+        function exportPDF() {
+            const element = document.getElementById('slideCanvas');
+            const opt = {
+                margin: 10,
+                filename: 'presentation.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast('PDF exported successfully', 'success');
+            });
+        }
+
+        // Undo/Redo
+        function saveState() {
+            // If we're not at the end of history, remove future states
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            
+            history.push(JSON.stringify(slides));
+            historyIndex = history.length - 1;
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                slides = JSON.parse(history[historyIndex]);
+                renderSlides();
+                renderCurrentSlide();
+                updateStatus();
+                showToast('Undo successful', 'success');
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                slides = JSON.parse(history[historyIndex]);
+                renderSlides();
+                renderCurrentSlide();
+                updateStatus();
+                showToast('Redo successful', 'success');
+            }
+        }
+
+        // UI Helpers
+        function updateStatus() {
+            document.getElementById('slideCounter').textContent = `Slide ${currentSlide + 1} of ${slides.length}`;
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.className = `toast show ${type}`;
+            document.getElementById('toastMessage').textContent = message;
+            
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.toolbar-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('statusText').textContent = `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected`;
+        }
+
+        function handleCanvasClick(e) {
+            if (currentTool === 'select') return;
+            
+            saveState();
+            
+            const slide = slides[currentSlide];
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            let newElement;
+            
+            switch (currentTool) {
+                case 'title':
+                    newElement = {
+                        type: 'title',
+                        content: 'New Title',
+                        style: { 
+                            position: 'absolute',
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            fontSize: '2.5rem',
+                            color: '#2c3e50',
+                            textAlign: 'center'
+                        }
+                    };
+                    break;
+                    
+                case 'text':
+                    newElement = {
+                        type: 'text',
+                        content: 'New Text',
+                        style: { 
+                            position: 'absolute',
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            fontSize: '1.2rem',
+                            color: '#34495e'
+                        }
+                    };
+                    break;
+                    
+                case 'bullets':
+                    newElement = {
+                        type: 'bullets',
+                        content: 'Bullet point 1\nBullet point 2\nBullet point 3',
+                        style: { 
+                            position: 'absolute',
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            fontSize: '1.1rem',
+                            color: '#34495e'
+                        }
+                    };
+                    break;
+                    
+                case 'image':
+                    newElement = {
+                        type: 'image',
+                        content: 'https://via.placeholder.com/400x300',
+                        style: { 
+                            position: 'absolute',
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            width: '400px',
+                            height: '300px'
+                        }
+                    };
+                    break;
+            }
+            
+            if (newElement) {
+                slide.elements.push(newElement);
+                renderCurrentSlide();
+                showToast('Element added', 'success');
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+            sidebarCollapsed = !sidebarCollapsed;
+        }
+
+        function showAIAssistant() {
+            const aiSuggestion = [
+                "Add a chart to visualize your data",
+                "Use consistent color scheme throughout",
+                "Simplify text to key points only",
+                "Add a relevant image to enhance understanding",
+                "Use animation to reveal points one by one"
+            ][Math.floor(Math.random() * 5)];
+            
+            showToast(`AI Suggestion: ${aiSuggestion}`, 'info');
+        }
+
+        // Initialize the application
+        window.onload = init;
+    </script>
+</body>
+</html>
