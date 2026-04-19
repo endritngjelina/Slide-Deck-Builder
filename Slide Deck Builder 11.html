@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Deck Builder Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f23;
+            color: #ffffff;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(78, 205, 196, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 1px;
+        }
+
+        .sidebar-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(78, 205, 196, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .slide-thumbnails-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .slide-thumbnail {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .slide-thumbnail:hover::before {
+            left: 100%;
+        }
+
+        .slide-thumbnail:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(78, 205, 196, 0.4);
+            transform: translateX(4px) scale(1.02);
+            box-shadow: 0 8px 32px rgba(78, 205, 196, 0.15);
+        }
+
+        .slide-thumbnail.active {
+            background: rgba(78, 205, 196, 0.15);
+            border-color: #4ecdc4;
+            box-shadow: 0 8px 32px rgba(78, 205, 196, 0.25);
+            transform: translateX(4px);
+        }
+
+        .slide-number {
+            font-size: 11px;
+            opacity: 0.6;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slide-title {
+            font-weight: 600;
+            margin-top: 6px;
+            font-size: 14px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .controls {
+            display: grid;
+            gap: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #7c8cea 0%, #8a5aa2 100%);
+        }
+
+        button:active {
+            transform: translateY(0);
+            transition: transform 0.1s ease;
+        }
+
+        /* Main Editor */
+        .main-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+        }
+
+        .toolbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .toolbar-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-right: 4px;
+        }
+
+        .toolbar button {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            width: auto;
+            margin: 0;
+            box-shadow: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toolbar button::before {
+            display: none;
+        }
+
+        .toolbar button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(78, 205, 196, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(78, 205, 196, 0.2);
+        }
+
+        .toolbar button.active {
+            background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);
+            color: white;
+            border-color: #4ecdc4;
+            box-shadow: 0 4px 16px rgba(78, 205, 196, 0.3);
+        }
+
+        .toolbar select {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar select:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+
+        .toolbar select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .color-picker {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-picker:hover {
+            border-color: rgba(78, 205, 196, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(78, 205, 196, 0.2);
+        }
+
+        /* Slide Canvas */
+        .slide-canvas {
+            flex: 1;
+            position: relative;
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .slide {
+            width: 900px;
+            height: 675px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transform-origin: center;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.03) 0%, rgba(69, 183, 209, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        .slide:hover {
+            transform: scale(1.01);
+            box-shadow: 
+                0 35px 70px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(78, 205, 196, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .slide-content {
+            padding: 48px;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .editable {
+            outline: none;
+            min-height: 40px;
+            margin: 16px 0;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            color: #1e293b;
+        }
+
+        .editable::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .editable:focus {
+            background: rgba(78, 205, 196, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .editable:focus::before {
+            border-color: rgba(78, 205, 196, 0.3);
+            box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.1);
+        }
+
+        .slide-title-input {
+            font-size: 42px;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-content-input {
+            font-size: 20px;
+            line-height: 1.7;
+            color: #475569;
+            margin-top: 32px;
+        }
+
+        /* Animation Classes */
+        .slide-transition {
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+        }
+
+        /* Presentation Mode */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .presentation-mode .slide {
+            width: 85vw;
+            height: 63.75vw;
+            max-width: 1400px;
+            max-height: 1050px;
+            box-shadow: 
+                0 50px 100px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .presentation-controls {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .presentation-controls button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .presentation-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(78, 205, 196, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .modal h3 {
+            margin-bottom: 24px;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .slide-preview {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            margin: 0;
+            padding: 24px;
+            min-height: 120px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide-preview:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(78, 205, 196, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(78, 205, 196, 0.15);
+        }
+
+        .slide-preview h4 {
+            color: #4ecdc4;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .slide-preview p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Export Progress */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 16px 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Enhanced Animations */
+        @keyframes slideInRight {
+            from { 
+                transform: translateX(100%) scale(0.9); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from { 
+                transform: translateX(-100%) scale(0.9); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+                filter: blur(5px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from { 
+                transform: scale(0.3) rotate(-5deg); 
+                opacity: 0; 
+                filter: blur(10px);
+            }
+            50% {
+                transform: scale(1.05) rotate(1deg);
+            }
+            to { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1; 
+                filter: blur(0);
+            }
+        }
+
+        .slide-transition {
+            animation-duration: 1s;
+            animation-fill-mode: both;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide-in-right { animation-name: slideInRight; }
+        .slide-in-left { animation-name: slideInLeft; }
+        .fade-in { animation-name: fadeIn; }
+        .zoom-in { animation-name: zoomIn; }
+
+        /* Micro-interactions */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        /* Floating elements */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Loading states */
+        .loading-skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .slide {
+                width: 80vw;
+                height: 60vw;
+                max-width: 800px;
+                max-height: 600px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                padding: 16px;
+                order: 2;
+            }
+            
+            .slide-thumbnails {
+                display: flex;
+                overflow-x: auto;
+                gap: 12px;
+                padding-bottom: 8px;
+            }
+            
+            .slide-thumbnail {
+                min-width: 120px;
+                margin-bottom: 0;
+            }
+            
+            .controls {
+                display: flex;
+                gap: 8px;
+                margin-top: 16px;
+            }
+            
+            .controls button {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            
+            .slide {
+                width: 90vw;
+                height: 67.5vw;
+                max-width: none;
+                max-height: none;
+            }
+            
+            .slide-content {
+                padding: 24px;
+            }
+            
+            .slide-title-input {
+                font-size: 28px;
+            }
+            
+            .slide-content-input {
+                font-size: 16px;
+            }
+            
+            .toolbar {
+                flex-wrap: wrap;
+                padding: 16px;
+                gap: 8px;
+            }
+            
+            .toolbar button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .slide-canvas {
+                padding: 20px;
+            }
+            
+            .slide {
+                width: 95vw;
+                height: 71.25vw;
+            }
+            
+            .slide-title-input {
+                font-size: 24px;
+            }
+            
+            .slide-content-input {
+                font-size: 14px;
+            }
+            
+            .modal-content {
+                padding: 24px;
+                margin: 20px;
+            }
+        }
+
+        /* High-performance CSS tricks */
+        .slide-canvas {
+            contain: layout style paint;
+        }
+
+        .slide {
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .sidebar {
+            contain: layout style;
+        }
+
+        /* Custom scrollbars for better UX */
+        .slide-thumbnails::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .slide-thumbnails::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Focus indicators for accessibility */
+        button:focus-visible,
+        .slide-thumbnail:focus-visible,
+        .editable:focus-visible {
+            outline: 2px solid #4ecdc4;
+            outline-offset: 2px;
+        }
+
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .toolbar,
+            .presentation-controls {
+                display: none;
+            }
+            
+            .slide {
+                width: 100%;
+                height: auto;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                page-break-after: always;
+            }
+        }
+
+        /* Dark theme enhancements */
+        .slide.dark-theme {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #f8fafc;
+        }
+
+        .slide.dark-theme .slide-title-input {
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide.dark-theme .slide-content-input {
+            color: #cbd5e1;
+        }
+
+        /* Glassmorphism effects */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Neon glow effects */
+        .neon-glow {
+            box-shadow: 
+                0 0 5px #4ecdc4,
+                0 0 10px #4ecdc4,
+                0 0 15px #4ecdc4,
+                0 0 20px #4ecdc4;
+        }
+
+        /* Gradient text effects */
+        .gradient-text {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* AI Assistant */
+        .ai-assistant {
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+        
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-header h4 {
+            font-size: 16px;
+            color: #4ecdc4;
+        }
+        
+        .ai-suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .ai-suggestion {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-suggestion:hover {
+            background: rgba(78, 205, 196, 0.15);
+            transform: translateX(3px);
+        }
+        
+        /* Collaboration */
+        .collaborators {
+            margin-top: 20px;
+        }
+        
+        .collaborators h4 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .collaborator-list {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .collaborator {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .collaborator.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            border: 2px solid rgba(26, 26, 46, 0.8);
+        }
+        
+        /* Export options */
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .export-option {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-option:hover {
+            background: rgba(78, 205, 196, 0.15);
+            transform: translateY(-3px);
+        }
+        
+        .export-option i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+        }
+        
+        .export-option h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .export-option p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Slide notes */
+        .slide-notes {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        
+        .slide-notes h4 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .notes-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            min-height: 100px;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+        }
+        
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(15, 15, 35, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-item i {
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-presentation"></i>
+                    SlideDeck Pro
+                </div>
+                <div class="sidebar-controls">
+                    <div class="control-btn" title="Save to cloud">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="control-btn" title="Share presentation">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-thumbnails-container" id="slideThumbnails">
+                <!-- Thumbnails will be generated here -->
+            </div>
+            
+            <div class="ai-assistant">
+                <div class="ai-header">
+                    <i class="fas fa-robot" style="color: #4ecdc4;"></i>
+                    <h4>AI Assistant</h4>
+                </div>
+                <div class="ai-suggestions">
+                    <div class="ai-suggestion" onclick="aiGenerateContent()">
+                        ✨ Generate content for this slide
+                    </div>
+                    <div class="ai-suggestion" onclick="aiImproveDesign()">
+                        🎨 Improve slide design
+                    </div>
+                    <div class="ai-suggestion" onclick="aiAddChart()">
+                        📊 Add a data visualization
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-notes">
+                <h4><i class="fas fa-sticky-note"></i> Speaker Notes</h4>
+                <textarea class="notes-input" placeholder="Add notes for your presentation..."></textarea>
+            </div>
+            
+            <div class="collaborators">
+                <h4>Collaborators</h4>
+                <div class="collaborator-list">
+                    <div class="collaborator active">JS</div>
+                    <div class="collaborator">TD</div>
+                    <div class="collaborator">AK</div>
+                    <div class="collaborator">+2</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button onclick="addSlide()"><i class="fas fa-plus"></i> Add Slide</button>
+                <button onclick="duplicateSlide()"><i class="fas fa-copy"></i> Duplicate</button>
+                <button onclick="deleteSlide()"><i class="fas fa-trash"></i> Delete</button>
+                <button onclick="openTemplateModal()"><i class="fas fa-palette"></i> Templates</button>
+                <button onclick="startPresentation()"><i class="fas fa-play"></i> Present</button>
+                <button onclick="openExportModal()"><i class="fas fa-file-export"></i> Export</button>
+            </div>
+        </div>
+
+        <!-- Main Editor -->
+        <div class="main-editor">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Format:</span>
+                    <button onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Font:</span>
+                    <select onchange="changeFont(this.value)">
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Inter" selected>Inter</option>
+                        <option value="Montserrat">Montserrat</option>
+                    </select>
+                </div>
+                
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Size:</span>
+                    <select onchange="changeFontSize(this.value)">
+                        <option value="12px">12px</option>
+                        <option value="14px">14px</option>
+                        <option value="16px">16px</option>
+                        <option value="18px" selected>18px</option>
+                        <option value="24px">24px</option>
+                        <option value="36px">36px</option>
+                        <option value="48px">48px</option>
+                    </select>
+                </div>
+                
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Colors:</span>
+                    <input type="color" class="color-picker" onchange="changeTextColor(this.value)" title="Text Color" value="#0f172a">
+                    <input type="color" class="color-picker" onchange="changeBackgroundColor(this.value)" title="Background Color" value="#ffffff">
+                </div>
+                
+                <div class="toolbar-group">
+                    <button onclick="addBulletPoint()"><i class="fas fa-list-ul"></i> Bullet</button>
+                    <button onclick="addImage()"><i class="fas fa-image"></i> Image</button>
+                    <button onclick="addShape('rectangle')"><i class="fas fa-square"></i> Shape</button>
+                </div>
+                
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Transition:</span>
+                    <select onchange="setTransition(this.value)">
+                        <option value="">No Transition</option>
+                        <option value="slide-in-right">Slide Right</option>
+                        <option value="slide-in-left">Slide Left</option>
+                        <option value="fade-in">Fade In</option>
+                        <option value="zoom-in" selected>Zoom In</option>
+                        <option value="pulse-animation">Pulse</option>
+                        <option value="float-animation">Float</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Slide Canvas -->
+            <div class="slide-canvas">
+                <div class="slide" id="currentSlide">
+                    <div class="slide-content">
+                        <div class="editable slide-title-input" contenteditable="true" data-placeholder="Click to add title">
+                            Welcome to Slide Deck Pro
+                        </div>
+                        <div class="editable slide-content-input" contenteditable="true" data-placeholder="Click to add content">
+                            Create stunning presentations with professional design and smooth transitions.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-item">
+                    <i class="fas fa-save"></i>
+                    Auto-saved just now
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-users"></i>
+                    4 collaborators online
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-chart-line"></i>
+                    AI Assistant enabled
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="slide" id="presentationSlide">
+            <div class="slide-content"></div>
+        </div>
+        <div class="presentation-controls">
+            <button onclick="previousSlide()"><i class="fas fa-arrow-left"></i> Previous</button>
+            <button onclick="nextSlide()">Next <i class="fas fa-arrow-right"></i></button>
+            <button onclick="exitPresentation()"><i class="fas fa-times"></i> Exit</button>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal" id="templateModal">
+        <div class="modal-content">
+            <h3>Choose a Template</h3>
+            <div class="template-grid">
+                <div class="slide-preview" onclick="applyTemplate('business')">
+                    <h4>Business Presentation</h4>
+                    <p>Professional layout for business presentations</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('creative')">
+                    <h4>Creative Design</h4>
+                    <p>Colorful and engaging for creative projects</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('minimal')">
+                    <h4>Minimal</h4>
+                    <p>Clean and simple design</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('tech')">
+                    <h4>Technology</h4>
+                    <p>Modern tech-themed template</p>
+                </div>
+                <div class="slide-preview" onclick="applyTemplate('dark')">
+                    <h4>Dark Theme</h4>
+                    <p>Elegant dark mode presentation</p>
+                </div>
+            </div>
+            <button onclick="closeModal('templateModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <h3>Export Presentation</h3>
+            
+            <div class="export-options">
+                <div class="export-option" onclick="exportHTML()">
+                    <i class="fas fa-file-code"></i>
+                    <h4>HTML</h4>
+                    <p>Web format with animations</p>
+                </div>
+                <div class="export-option" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    <h4>PDF</h4>
+                    <p>Print-ready document</p>
+                </div>
+                <div class="export-option" onclick="exportPPTX()">
+                    <i class="fas fa-file-powerpoint"></i>
+                    <h4>PPTX</h4>
+                    <p>Microsoft PowerPoint</p>
+                </div>
+                <div class="export-option" onclick="exportVideo()">
+                    <i class="fas fa-file-video"></i>
+                    <h4>Video</h4>
+                    <p>MP4 with transitions</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Export Quality:</label>
+                <select id="exportQuality">
+                    <option value="high">High (larger file)</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="low">Low (smaller file)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" checked> Include speaker notes
+                </label>
+            </div>
+            
+            <button onclick="closeModal('exportModal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Export Progress Modal -->
+    <div class="modal" id="exportProgressModal">
+        <div class="modal-content">
+            <h3>Exporting Presentation</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="exportStatus">Preparing export...</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let slides = [
+            {
+                id: 1,
+                title: "Welcome to Slide Deck Pro",
+                content: "Create stunning presentations with professional design and smooth transitions.",
+                backgroundColor: "#ffffff",
+                transition: "zoom-in"
+            }
+        ];
+        let currentSlideIndex = 0;
+        let presentationIndex = 0;
+
+        // Initialize application
+        function initApp() {
+            renderThumbnails();
+            loadSlide(0);
+            setupEventListeners();
+            
+            // Add sample slides for demo
+            setTimeout(() => {
+                addSlide();
+                slides[1].title = "Cutting-Edge Features";
+                slides[1].content = "• AI-powered content generation<br>• Real-time collaboration<br>• Advanced animations & transitions<br>• Professional templates";
+                slides[1].backgroundColor = "#f0f8ff";
+                
+                addSlide();
+                slides[2].title = "Export to Any Format";
+                slides[2].content = "Seamlessly export to:<br><br>📄 HTML • 📑 PDF • 📊 PPTX • 🎬 Video";
+                slides[2].backgroundColor = "#fff0f5";
+                
+                renderThumbnails();
+                loadSlide(0);
+            }, 500);
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Auto-save on content change
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('editable')) {
+                    saveCurrentSlide();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            simulateSave();
+                            break;
+                        case 'n':
+                            e.preventDefault();
+                            addSlide();
+                            break;
+                        case 'd':
+                            e.preventDefault();
+                            duplicateSlide();
+                            break;
+                    }
+                }
+                
+                // Presentation navigation
+                if (document.getElementById('presentationMode').style.display === 'flex') {
+                    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                        e.preventDefault();
+                        nextSlide();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                        e.preventDefault();
+                        previousSlide();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        exitPresentation();
+                    }
+                }
+            });
+        }
+
+        // Slide management
+        function addSlide() {
+            const newSlide = {
+                id: Date.now(),
+                title: "New Slide Title",
+                content: "Click to add content",
+                backgroundColor: "#ffffff",
+                transition: "fade-in"
+            };
+            slides.push(newSlide);
+            currentSlideIndex = slides.length - 1;
+            renderThumbnails();
+            loadSlide(currentSlideIndex);
+        }
+
+        function duplicateSlide() {
+            const currentSlide = slides[currentSlideIndex];
+            const duplicated = {
+                ...currentSlide,
+                id: Date.now(),
+                title: currentSlide.title + " (Copy)"
+            };
+            slides.splice(currentSlideIndex + 1, 0, duplicated);
+            currentSlideIndex++;
+            renderThumbnails();
+            loadSlide(currentSlideIndex);
+        }
+
+        function deleteSlide() {
+            if (slides.length > 1) {
+                slides.splice(currentSlideIndex, 1);
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = slides.length - 1;
+                }
+                renderThumbnails();
+                loadSlide(currentSlideIndex);
+            } else {
+                alert("You need at least one slide in your presentation.");
+            }
+        }
+
+        function loadSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            
+            currentSlideIndex = index;
+            const slide = slides[index];
+            const slideElement = document.getElementById('currentSlide');
+            
+            // Update content
+            const titleElement = slideElement.querySelector('.slide-title-input');
+            const contentElement = slideElement.querySelector('.slide-content-input');
+            
+            titleElement.textContent = slide.title;
+            contentElement.innerHTML = slide.content;
+            
+            // Update background
+            slideElement.style.backgroundColor = slide.backgroundColor;
+            
+            // Update thumbnails
+            renderThumbnails();
+        }
+
+        function saveCurrentSlide() {
+            const slide = slides[currentSlideIndex];
+            const slideElement = document.getElementById('currentSlide');
+            
+            slide.title = slideElement.querySelector('.slide-title-input').textContent || 'Untitled';
+            slide.content = slideElement.querySelector('.slide-content-input').innerHTML || '';
+            
+            renderThumbnails();
+        }
+
+        function renderThumbnails() {
+            const container = document.getElementById('slideThumbnails');
+            container.innerHTML = '';
+            
+            slides.forEach((slide, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `slide-thumbnail ${index === currentSlideIndex ? 'active' : ''}`;
+                thumbnail.onclick = () => loadSlide(index);
+                
+                thumbnail.innerHTML = `
+                    <div class="slide-number">Slide ${index + 1}</div>
+                    <div class="slide-title">${slide.title}</div>
+                `;
+                
+                container.appendChild(thumbnail);
+            });
+        }
+
+        // Formatting functions
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            saveCurrentSlide();
+        }
+
+        function changeFont(font) {
+            document.execCommand('fontName', false, font);
+            saveCurrentSlide();
+        }
+
+        function changeFontSize(size) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.style.fontSize = size;
+                
+                try {
+                    range.surroundContents(span);
+                } catch (e) {
+                    span.appendChild(range.extractContents());
+                    range.insertNode(span);
+                }
+            }
+            saveCurrentSlide();
+        }
+
+        function changeTextColor(color) {
+            document.execCommand('foreColor', false, color);
+            saveCurrentSlide();
+        }
+
+        function changeBackgroundColor(color) {
+            const slide = slides[currentSlideIndex];
+            slide.backgroundColor = color;
+            document.getElementById('currentSlide').style.backgroundColor = color;
+        }
+
+        function addBulletPoint() {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const bullet = document.createElement('div');
+            bullet.innerHTML = '• New bullet point';
+            bullet.style.marginLeft = '20px';
+            bullet.style.marginBottom = '10px';
+            
+            range.insertNode(bullet);
+            saveCurrentSlide();
+        }
+
+        function addImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '300px';
+                        img.style.height = 'auto';
+                        img.style.margin = '10px';
+                        img.style.borderRadius = '5px';
+                        
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            range.insertNode(img);
+                        }
+                        saveCurrentSlide();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+        
+        function addShape(shape) {
+            const shapeElement = document.createElement('div');
+            shapeElement.contentEditable = false;
+            shapeElement.style.display = 'inline-block';
+            shapeElement.style.margin = '10px';
+            shapeElement.style.cursor = 'move';
+            
+            switch(shape) {
+                case 'circle':
+                    shapeElement.style.width = '100px';
+                    shapeElement.style.height = '100px';
+                    shapeElement.style.borderRadius = '50%';
+                    shapeElement.style.backgroundColor = '#4ecdc4';
+                    break;
+                case 'rectangle':
+                    shapeElement.style.width = '150px';
+                    shapeElement.style.height = '100px';
+                    shapeElement.style.backgroundColor = '#ff6b6b';
+                    break;
+                case 'triangle':
+                    shapeElement.style.width = '0';
+                    shapeElement.style.height = '0';
+                    shapeElement.style.borderLeft = '50px solid transparent';
+                    shapeElement.style.borderRight = '50px solid transparent';
+                    shapeElement.style.borderBottom = '100px solid #45b7d1';
+                    break;
+            }
+            
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(shapeElement);
+            }
+            
+            saveCurrentSlide();
+        }
+
+        function setTransition(transition) {
+            slides[currentSlideIndex].transition = transition;
+        }
+
+        // Template functions
+        function openTemplateModal() {
+            document.getElementById('templateModal').style.display = 'flex';
+        }
+        
+        function openExportModal() {
+            document.getElementById('exportModal').style.display = 'flex';
+        }
+
+        function applyTemplate(template) {
+            const slideElement = document.getElementById('currentSlide');
+            
+            switch(template) {
+                case 'business':
+                    slideElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    slideElement.style.color = 'white';
+                    break;
+                case 'creative':
+                    slideElement.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)';
+                    slideElement.style.color = 'white';
+                    break;
+                case 'minimal':
+                    slideElement.style.background = '#ffffff';
+                    slideElement.style.color = '#333333';
+                    slideElement.style.border = '2px solid #f0f0f0';
+                    break;
+                case 'tech':
+                    slideElement.style.background = 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)';
+                    slideElement.style.color = 'white';
+                    break;
+                case 'dark':
+                    slideElement.style.background = 'linear-gradient(135deg, #232526, #414345)';
+                    slideElement.style.color = 'white';
+                    break;
+            }
+            
+            slides[currentSlideIndex].backgroundColor = slideElement.style.background;
+            closeModal('templateModal');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Presentation mode
+        function startPresentation() {
+            presentationIndex = 0;
+            document.getElementById('presentationMode').style.display = 'flex';
+            showPresentationSlide(0);
+        }
+
+        function showPresentationSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            
+            presentationIndex = index;
+            const slide = slides[index];
+            const presentationSlide = document.getElementById('presentationSlide');
+            
+            // Clear existing animation classes
+            presentationSlide.className = 'slide';
+            
+            // Set content
+            presentationSlide.innerHTML = `
+                <div class="slide-content">
+                    <div class="slide-title-input">${slide.title}</div>
+                    <div class="slide-content-input">${slide.content}</div>
+                </div>
+            `;
+            
+            // Set background
+            presentationSlide.style.backgroundColor = slide.backgroundColor;
+            
+            // Add transition animation
+            if (slide.transition) {
+                setTimeout(() => {
+                    presentationSlide.classList.add('slide-transition', slide.transition);
+                }, 50);
+            }
+        }
+
+        function nextSlide() {
+            if (presentationIndex < slides.length - 1) {
+                presentationIndex++;
+                showPresentationSlide(presentationIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (presentationIndex > 0) {
+                presentationIndex--;
+                showPresentationSlide(presentationIndex);
+            }
+        }
+
+        function exitPresentation() {
+            document.getElementById('presentationMode').style.display = 'none';
+        }
+
+        // Export functions
+        function exportHTML() {
+            showExportProgress('HTML');
+            setTimeout(() => {
+                closeModal('exportModal');
+                simulateExportComplete('HTML');
+            }, 2000);
+        }
+        
+        function exportPDF() {
+            showExportProgress('PDF');
+            setTimeout(() => {
+                closeModal('exportModal');
+                simulateExportComplete('PDF');
+            }, 2500);
+        }
+        
+        function exportPPTX() {
+            showExportProgress('PPTX');
+            setTimeout(() => {
+                closeModal('exportModal');
+                simulateExportComplete('PPTX');
+            }, 3000);
+        }
+        
+        function exportVideo() {
+            showExportProgress('Video');
+            setTimeout(() => {
+                closeModal('exportModal');
+                simulateExportComplete('Video');
+            }, 4000);
+        }
+        
+        function simulateExportComplete(format) {
+            alert(`Your presentation has been exported as ${format} format.\n\nIn a production environment, this would download the file.`);
+        }
+
+        function showExportProgress(format) {
+            document.getElementById('exportProgressModal').style.display = 'flex';
+            const progressFill = document.getElementById('progressFill');
+            const status = document.getElementById('exportStatus');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                
+                if (progress === 10) status.textContent = 'Preparing slides...';
+                else if (progress === 30) status.textContent = 'Applying formatting...';
+                else if (progress === 60) status.textContent = `Exporting to ${format}...`;
+                else if (progress === 90) status.textContent = 'Finalizing export...';
+                else if (progress === 100) {
+                    status.textContent = 'Export complete!';
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        closeModal('exportProgressModal');
+                    }, 1000);
+                }
+            }, 200);
+        }
+
+        // AI features
+        function aiGenerateContent() {
+            const slide = slides[currentSlideIndex];
+            const aiContent = [
+                "This slide highlights key innovations in our platform that drive user engagement and retention.",
+                "Our data-driven approach has resulted in a 45% increase in customer satisfaction and a 30% reduction in churn.",
+                "The integration of AI technologies allows for personalized experiences at scale, enhancing user value.",
+                "Looking forward, we plan to expand our capabilities to include predictive analytics and automated insights."
+            ];
+            
+            slide.content = aiContent.join('<br>• ');
+            loadSlide(currentSlideIndex);
+            
+            // Show AI confirmation
+            document.getElementById('exportStatus').textContent = 'AI content generated!';
+            document.getElementById('exportProgressModal').style.display = 'flex';
+            setTimeout(() => {
+                closeModal('exportProgressModal');
+            }, 1500);
+        }
+        
+        function aiImproveDesign() {
+            const slideElement = document.getElementById('currentSlide');
+            slideElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            slideElement.style.color = 'white';
+            slides[currentSlideIndex].backgroundColor = slideElement.style.background;
+            
+            // Show AI confirmation
+            document.getElementById('exportStatus').textContent = 'Design enhanced with AI!';
+            document.getElementById('exportProgressModal').style.display = 'flex';
+            setTimeout(() => {
+                closeModal('exportProgressModal');
+            }, 1500);
+        }
+        
+        function aiAddChart() {
+            const slide = slides[currentSlideIndex];
+            slide.content += `<div style="text-align:center; margin-top:20px;">
+                <div style="display:inline-block; background:#f8f9fa; padding:20px; border-radius:12px;">
+                    <h3 style="color:#333; margin-bottom:15px;">User Growth Metrics</h3>
+                    <div style="display:flex; align-items:flex-end; height:200px; gap:20px; justify-content:center;">
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div style="width:40px; height:120px; background:#4ecdc4; border-radius:8px 8px 0 0;"></div>
+                            <span style="margin-top:10px; color:#666;">Q1</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div style="width:40px; height:160px; background:#ff6b6b; border-radius:8px 8px 0 0;"></div>
+                            <span style="margin-top:10px; color:#666;">Q2</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div style="width:40px; height:190px; background:#45b7d1; border-radius:8px 8px 0 0;"></div>
+                            <span style="margin-top:10px; color:#666;">Q3</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center;">
+                            <div style="width:40px; height:220px; background:#96ceb4; border-radius:8px 8px 0 0;"></div>
+                            <span style="margin-top:10px; color:#666;">Q4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            loadSlide(currentSlideIndex);
+            
+            // Show AI confirmation
+            document.getElementById('exportStatus').textContent = 'Chart added by AI!';
+            document.getElementById('exportProgressModal').style.display = 'flex';
+            setTimeout(() => {
+                closeModal('exportProgressModal');
+            }, 1500);
+        }
+        
+        // Simulate cloud save
+        function simulateSave() {
+            document.getElementById('exportStatus').textContent = 'Presentation saved to cloud!';
+            document.getElementById('exportProgressModal').style.display = 'flex';
+            setTimeout(() => {
+                closeModal('exportProgressModal');
+            }, 1500);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            
+            // Auto-save every 30 seconds
+            setInterval(simulateSave, 30000);
+        });
+    </script>
+</body>
+</html>
